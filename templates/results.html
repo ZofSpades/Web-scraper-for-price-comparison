@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Price Comparison Results</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: #f5f5f5;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 28px;
+            margin-bottom: 10px;
+        }
+        
+        .header p {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+        
+        .table-container {
+            overflow-x: auto;
+            max-height: 600px;
+            overflow-y: auto;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        thead {
+            background: #f8f9fa;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+        
+        th {
+            padding: 15px;
+            text-align: left;
+            font-weight: 600;
+            color: #333;
+            border-bottom: 2px solid #dee2e6;
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        td {
+            padding: 15px;
+            border-bottom: 1px solid #e9ecef;
+            font-size: 14px;
+            color: #495057;
+        }
+        
+        tr {
+            transition: background-color 0.2s ease;
+        }
+        
+        tbody tr:hover {
+            background-color: #f8f9fa;
+        }
+        
+        /* Cheapest item highlighting */
+        .cheapest-row {
+            background: linear-gradient(90deg, #d4edda 0%, #c3e6cb 100%) !important;
+            font-weight: 600;
+            position: relative;
+        }
+        
+        .cheapest-row td {
+            color: #155724;
+            border-bottom: 2px solid #b1dfbb;
+        }
+        
+        .cheapest-badge {
+            display: inline-block;
+            background: #28a745;
+            color: white;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            margin-left: 8px;
+            letter-spacing: 0.5px;
+        }
+        
+        .price-cell {
+            font-weight: 600;
+            font-size: 16px;
+            color: #28a745;
+        }
+        
+        .cheapest-row .price-cell {
+            font-size: 18px;
+            color: #155724;
+        }
+        
+        .link-cell a {
+            color: #667eea;
+            text-decoration: none;
+            word-break: break-all;
+        }
+        
+        .link-cell a:hover {
+            text-decoration: underline;
+        }
+        
+        .rating-cell {
+            color: #f39c12;
+            font-weight: 600;
+        }
+        
+        .availability-in-stock {
+            color: #28a745;
+            font-weight: 600;
+        }
+        
+        .availability-limited {
+            color: #ffc107;
+            font-weight: 600;
+        }
+        
+        .availability-out {
+            color: #dc3545;
+            font-weight: 600;
+        }
+        
+        /* Pagination */
+        .pagination {
+            padding: 20px 30px;
+            background: #f8f9fa;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-top: 1px solid #dee2e6;
+        }
+        
+        .pagination-info {
+            color: #6c757d;
+            font-size: 14px;
+        }
+        
+        .pagination-buttons {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .pagination-buttons a,
+        .pagination-buttons span {
+            padding: 8px 16px;
+            border-radius: 6px;
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.2s ease;
+        }
+        
+        .pagination-buttons a {
+            background: #667eea;
+            color: white;
+        }
+        
+        .pagination-buttons a:hover {
+            background: #5568d3;
+            transform: translateY(-1px);
+        }
+        
+        .pagination-buttons span {
+            background: #e9ecef;
+            color: #6c757d;
+            cursor: not-allowed;
+        }
+        
+        .page-numbers {
+            display: flex;
+            gap: 5px;
+            align-items: center;
+        }
+        
+        .page-number {
+            padding: 6px 12px;
+            border-radius: 4px;
+            background: white;
+            border: 1px solid #dee2e6;
+            color: #495057;
+            text-decoration: none;
+            font-size: 14px;
+        }
+        
+        .page-number.active {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+        
+        .page-number:hover:not(.active) {
+            background: #f8f9fa;
+        }
+        
+        .no-results {
+            padding: 60px 30px;
+            text-align: center;
+            color: #6c757d;
+        }
+        
+        .no-results h2 {
+            font-size: 24px;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔍 Price Comparison Results</h1>
+            <p>Compare prices across multiple retailers and find the best deal</p>
+        </div>
+        
+        {% if results %}
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Site</th>
+                        <th>Title</th>
+                        <th>Price</th>
+                        <th>Rating</th>
+                        <th>Availability</th>
+                        <th>Link</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for i, item in enumerate(results) %}
+                    <tr class="{% if (start_idx + i) == cheapest_idx %}cheapest-row{% endif %}">
+                        <td>
+                            {{ item.site }}
+                            {% if (start_idx + i) == cheapest_idx %}
+                            <span class="cheapest-badge">Best Price</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ item.title }}</td>
+                        <td class="price-cell">{{ item.price }}</td>
+                        <td class="rating-cell">⭐ {{ item.rating }}</td>
+                        <td>
+                            <span class="
+                                {% if 'In Stock' in item.availability %}availability-in-stock
+                                {% elif 'Limited' in item.availability or 'Members' in item.availability %}availability-limited
+                                {% else %}availability-out
+                                {% endif %}
+                            ">
+                                {{ item.availability }}
+                            </span>
+                        </td>
+                        <td class="link-cell">
+                            <a href="{{ item.link }}" target="_blank">View Product →</a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        
+        <div class="pagination">
+            <div class="pagination-info">
+                Showing {{ start_idx + 1 }}-{{ start_idx + results|length }} of {{ pagination.total_items }} results
+            </div>
+            <div class="pagination-buttons">
+                {% if pagination.has_prev %}
+                <a href="?page={{ pagination.current_page - 1 }}">← Previous</a>
+                {% else %}
+                <span>← Previous</span>
+                {% endif %}
+                
+                <div class="page-numbers">
+                    {% for page_num in range(1, pagination.total_pages + 1) %}
+                    <a href="?page={{ page_num }}" class="page-number {% if page_num == pagination.current_page %}active{% endif %}">
+                        {{ page_num }}
+                    </a>
+                    {% endfor %}
+                </div>
+                
+                {% if pagination.has_next %}
+                <a href="?page={{ pagination.current_page + 1 }}">Next →</a>
+                {% else %}
+                <span>Next →</span>
+                {% endif %}
+            </div>
+        </div>
+        {% else %}
+        <div class="no-results">
+            <h2>No Results Found</h2>
+            <p>Try searching for a different product.</p>
+        </div>
+        {% endif %}
+    </div>
+</body>
+</html>
