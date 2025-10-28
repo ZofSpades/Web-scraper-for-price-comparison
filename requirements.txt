@@ -1,0 +1,22 @@
+# Core Dependencies
+Flask==3.0.0
+reportlab==4.0.7
+
+# Web Scraping (for the actual scraper implementation)
+beautifulsoup4==4.12.2
+requests==2.31.0
+selenium==4.15.2
+lxml==4.9.3
+
+# Data Processing
+pandas==2.1.3
+
+# Additional utilities
+python-dateutil==2.8.2
+Pillow==10.1.0
+
+# Development Dependencies
+pytest==7.4.3
+pytest-flask==1.3.0
+black==23.11.0
+flake8==6.1.0
