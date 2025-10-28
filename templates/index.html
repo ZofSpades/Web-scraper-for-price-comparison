@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Price Comparison Tool - Input</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        
+        .container {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            padding: 40px;
+            max-width: 600px;
+            width: 100%;
+        }
+        
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 28px;
+            text-align: center;
+        }
+        
+        .subtitle {
+            color: #666;
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+        
+        .search-form {
+            margin-bottom: 20px;
+        }
+        
+        .input-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .search-input {
+            flex: 1;
+            padding: 14px 18px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+        }
+        
+        .search-input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+        
+        .submit-btn {
+            padding: 14px 32px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        
+        .submit-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+        }
+        
+        .submit-btn:active {
+            transform: translateY(0);
+        }
+        
+        .result-container {
+            display: none;
+            padding: 20px;
+            border-radius: 8px;
+            margin-top: 20px;
+            animation: slideIn 0.3s ease;
+        }
+        
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .result-success {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+        }
+        
+        .result-error {
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
+        
+        .result-title {
+            font-weight: 600;
+            margin-bottom: 10px;
+            font-size: 18px;
+        }
+        
+        .result-details {
+            font-size: 14px;
+            line-height: 1.6;
+        }
+        
+        .result-details strong {
+            display: inline-block;
+            min-width: 80px;
+        }
+        
+        .result-value {
+            background: rgba(0, 0, 0, 0.05);
+            padding: 8px 12px;
+            border-radius: 4px;
+            margin-top: 10px;
+            word-break: break-all;
+            font-family: 'Courier New', monospace;
+        }
+        
+        .guidelines {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 20px;
+            margin-top: 30px;
+        }
+        
+        .guidelines h3 {
+            color: #333;
+            margin-bottom: 15px;
+            font-size: 16px;
+        }
+        
+        .guidelines ul {
+            list-style-position: inside;
+            color: #666;
+            font-size: 14px;
+            line-height: 1.8;
+        }
+        
+        .guidelines ul li {
+            margin-bottom: 5px;
+        }
+        
+        .icon {
+            font-size: 48px;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="icon">🔍</div>
+        <h1>Web Scraper Price Comparison Tool</h1>
+        <p class="subtitle">Enter a product name or URL to begin</p>
+        
+        <form class="search-form" id="searchForm">
+            <div class="input-group">
+                <input 
+                    type="text" 
+                    class="search-input" 
+                    id="searchInput" 
+                    name="search_input"
+                    placeholder="e.g., 'iPhone 15 Pro' or 'https://example.com/product'"
+                    required
+                    autocomplete="off"
+                >
+                <button type="submit" class="submit-btn">Submit</button>
+            </div>
+        </form>
+        
+        <div class="result-container" id="resultContainer">
+            <div class="result-title" id="resultTitle"></div>
+            <div class="result-details" id="resultDetails"></div>
+        </div>
+        
+        <div class="guidelines">
+            <h3>ℹ️ Input Guidelines</h3>
+            <ul>
+                <li><strong>Product Name:</strong> Any product you want to search (minimum 2 characters)</li>
+                <li><strong>Product URL:</strong> A direct link to a product page (must start with http:// or https://)</li>
+                <li>Examples: "iPhone 15 Pro", "Sony Headphones", "https://www.amazon.com/product/12345"</li>
+            </ul>
+        </div>
+    </div>
+    
+    <script>
+        const form = document.getElementById('searchForm');
+        const resultContainer = document.getElementById('resultContainer');
+        const resultTitle = document.getElementById('resultTitle');
+        const resultDetails = document.getElementById('resultDetails');
+        
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const formData = new FormData(form);
+            
+            try {
+                const response = await fetch('/submit_input', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const data = await response.json();
+                
+                // Show result container
+                resultContainer.style.display = 'block';
+                
+                if (data.success) {
+                    resultContainer.className = 'result-container result-success';
+                    resultTitle.innerHTML = '✓ ' + data.message;
+                    resultDetails.innerHTML = `
+                        <p><strong>Type:</strong> ${data.type.replace('_', ' ').charAt(0).toUpperCase() + data.type.replace('_', ' ').slice(1)}</p>
+                        <p><strong>Status:</strong> Valid</p>
+                        <div class="result-value">${data.value}</div>
+                    `;
+                } else {
+                    resultContainer.className = 'result-container result-error';
+                    resultTitle.innerHTML = '✗ Invalid Input';
+                    resultDetails.innerHTML = `<p>${data.message}</p>`;
+                }
+                
+                // Scroll to result
+                resultContainer.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                
+            } catch (error) {
+                resultContainer.style.display = 'block';
+                resultContainer.className = 'result-container result-error';
+                resultTitle.innerHTML = '✗ Error';
+                resultDetails.innerHTML = '<p>An error occurred. Please try again.</p>';
+            }
+        });
+    </script>
+</body>
+</html>
