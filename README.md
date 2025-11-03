@@ -24,19 +24,36 @@ This implementation adds CSV export and PDF report generation capabilities to th
 - **CLI**: Comprehensive command-line interface with multiple flags
 - **API**: RESTful endpoints for programmatic access
 
+### ✅ NEW: Database Integration (Search History)
+- **SQLite/MySQL support** for storing search queries and results
+- **Complete CRUD operations** for searches, results, sites
+- **Query by search_id and date** - full history tracking
+- **Analytics** - popular queries, site performance, statistics
+- **Export tracking** - record all CSV/PDF exports
+- **Migration tools** - easy database setup and data migration
+
 ## File Structure
 
 ```
 web_scraper_exports/
-├── export_utils.py          # Core export functionality (CSV & PDF)
-├── cli.py                   # Command-line interface
-├── app.py                   # Flask web application
-├── requirements.txt         # Python dependencies
+├── export_utils.py              # Core export functionality (CSV & PDF)
+├── cli.py                       # Command-line interface
+├── app.py                       # Flask web application
+├── app_with_database.py         # Example: Flask app with database integration
+├── database.py                  # Database layer (SQLite/MySQL)
+├── migrate.py                   # Database migration and setup tool
+├── setup_db.sh                  # Interactive database setup script
+├── test_database.py             # Database functionality tests
+├── schema.sql                   # Universal database schema
+├── schema_sqlite.sql            # SQLite-optimized schema
+├── requirements.txt             # Python dependencies
+├── DATABASE_SETUP.md            # Complete database documentation
+├── DB_IMPLEMENTATION_SUMMARY.md # Database implementation summary
 ├── templates/
-│   ├── base.html           # Base template
-│   ├── index.html          # Search page
-│   └── results.html        # Results with export buttons
-└── README.md               # This file
+│   ├── base.html               # Base template
+│   ├── index.html              # Search page
+│   └── results.html            # Results with export buttons
+└── README.md                   # This file
 ```
 
 ## Installation
@@ -48,9 +65,24 @@ web_scraper_exports/
    pip install -r requirements.txt
    ```
 
-3. **Verify installation:**
+3. **Set up database (optional but recommended):**
+   ```bash
+   # Interactive setup
+   ./setup_db.sh
+   
+   # Or manually with SQLite
+   python3 migrate.py init-sqlite --db scraper_history.db
+   
+   # Or with MySQL
+   python3 migrate.py init-mysql --host localhost --user root --password YOUR_PASSWORD
+   ```
+
+4. **Verify installation:**
    ```bash
    python -c "import reportlab; import flask; print('Dependencies OK')"
+   
+   # Test database (optional)
+   python3 test_database.py
    ```
 
 ## Usage
@@ -410,6 +442,73 @@ pip install Flask
 **Issue: CSV encoding problems**
 - Files are saved as UTF-8
 - Open in Excel using "Import Data" feature
+
+**Issue: Database connection errors**
+- For SQLite: Ensure write permissions in the database directory
+- For MySQL: Verify server is running and credentials are correct
+- See `DATABASE_SETUP.md` for detailed troubleshooting
+
+## Database Features (New!)
+
+### Search History Tracking
+
+The application now includes a complete database layer for tracking search history:
+
+```python
+from database import create_sqlite_db
+
+# Initialize database
+db = create_sqlite_db('scraper_history.db')
+
+# Save search and results
+search_id = db.create_search(query="laptop")
+db.add_results_batch(search_id, results)
+
+# Query by search ID
+saved_results = db.get_results_by_search_id(search_id)
+
+# Query by date
+from datetime import datetime, timedelta
+week_ago = datetime.now() - timedelta(days=7)
+recent = db.get_searches_by_date(week_ago)
+```
+
+### Key Features
+
+1. **Dual Database Support**: Works with SQLite (local development) or MySQL (production)
+2. **Complete CRUD Operations**: Create, read, update, delete for all entities
+3. **History Tracking**: Search queries, results, timestamps, duration
+4. **Analytics**: Popular queries, site performance, search statistics
+5. **Export Tracking**: Record all CSV/PDF exports for audit trail
+6. **Flexible Metadata**: Attach custom metadata to any search
+
+### Quick Database Setup
+
+```bash
+# Interactive setup (recommended)
+./setup_db.sh
+
+# Or direct initialization
+python3 migrate.py init-sqlite --db scraper_history.db
+
+# Test the database
+python3 test_database.py
+```
+
+### Using Database in Flask App
+
+See `app_with_database.py` for a complete example of integrating the database layer with the Flask application. Key additions:
+
+- `/history` - View all search history
+- `/search/<id>` - View specific search details
+- `/api/statistics` - Get search analytics
+- `/api/search/history` - API access to search history
+
+### Documentation
+
+- **Complete Guide**: See `DATABASE_SETUP.md` for comprehensive documentation
+- **Implementation Details**: See `DB_IMPLEMENTATION_SUMMARY.md` for technical details
+- **Schema Documentation**: See `schema.sql` and `schema_sqlite.sql` for table structures
 
 ## Future Enhancements
 
