@@ -132,3 +132,11 @@ dmypy.json
 # OS specific files
 .DS_Store
 Thumbs.db
+
+# Project specific
+*.log
+scraper.log
+*.csv
+*.pdf
+exports/
+data/
