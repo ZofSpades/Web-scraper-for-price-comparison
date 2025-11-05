@@ -144,3 +144,21 @@ data/
 # Database files
 scraper_history.db
 *.db
+*.db-journal
+*.sqlite
+*.sqlite3
+
+# Chrome/Selenium files
+chromedriver.exe
+geckodriver.exe
+*.crx
+
+# Export files
+exports/
+*.csv
+*.pdf
+
+# Test files
+test_scrapers.py
+test_*.py
+

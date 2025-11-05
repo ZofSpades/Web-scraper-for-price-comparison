@@ -346,6 +346,22 @@ def history():
     return render_template('history.html', searches=recent_searches)
 
 
+@app.route('/statistics')
+def statistics():
+    """View statistics and analytics"""
+    days = request.args.get('days', 30, type=int)
+    
+    stats = db.get_search_statistics(days=days)
+    popular = db.get_popular_queries(limit=10)
+    sites = db.get_site_performance()
+    
+    return render_template('statistics.html',
+                         stats=stats,
+                         popular=popular,
+                         sites=sites,
+                         days=days)
+
+
 @app.route('/search/<int:search_id>')
 def view_search(search_id):
     """View a specific search and its results"""

@@ -7,6 +7,9 @@ from scrapers.scraper_registry import ScraperRegistry
 from scrapers.scraper_controller import ScraperController
 from scrapers.amazon_scraper import AmazonScraper
 from scrapers.flipkart_scraper import FlipkartScraper
+from scrapers.snapdeal_scraper import SnapdealScraper
+from scrapers.myntra_scraper import MyntraScraper
+from scrapers.croma_scraper import CromaScraper
 from typing import List, Dict
 import concurrent.futures
 
@@ -29,9 +32,16 @@ class ScraperManager:
         self.registry = ScraperRegistry()
         self.controller = ScraperController(self.registry)
         
+        # Set higher timeout for scraping operations (30 seconds per site)
+        self.controller.set_timeout(30)
+        self.controller.set_max_retries(2)
+        
         # Register scrapers
         self.registry.register(AmazonScraper())
         self.registry.register(FlipkartScraper())
+        self.registry.register(SnapdealScraper())
+        self.registry.register(MyntraScraper())
+        self.registry.register(CromaScraper())
         
         # Initialize currency converter with INR as base
         self.currency_converter = CurrencyConverter(base_currency="INR")
@@ -47,11 +57,16 @@ class ScraperManager:
         Returns:
             List of product results from all sites
         """
-        if sites is None or 'all' in sites:
+        print(f"[SCRAPER_MANAGER] search_product called with query='{query}', sites={sites}")
+        
+        if sites is None or 'all' in sites or len(sites) == 0:
             # Search all registered sites
+            print(f"[SCRAPER_MANAGER] Searching ALL registered sites: {self.registry.get_registered_sites()}")
             results = self.controller.scrape_all(query)
+            print(f"[SCRAPER_MANAGER] Raw results from scrape_all: {len(results)} results")
         else:
             # Search specific sites
+            print(f"[SCRAPER_MANAGER] Searching specific sites: {sites}")
             results = []
             for site in sites:
                 scraper = self.registry.get_scraper(site.lower())
@@ -70,7 +85,9 @@ class ScraperManager:
                             'error': str(e)
                         })
         
-        return self._format_results(results)
+        formatted = self._format_results(results)
+        print(f"[SCRAPER_MANAGER] Formatted results: {len(formatted)} results")
+        return formatted
     
     def _format_results(self, results: List[Dict]) -> List[Dict]:
         """
@@ -82,8 +99,12 @@ class ScraperManager:
         offers = []
         
         for result in results:
+            site = result.get('site', 'Unknown')
+            print(f"[FORMAT] Processing result from {site}: title={result.get('title', 'N/A')}, price={result.get('price', 'N/A')}")
+            
             # Skip if error occurred
             if 'error' in result and result['title'] == 'Error':
+                print(f"[FORMAT] Skipping {site} - error result: {result.get('error')}")
                 continue
             
             try:
@@ -222,7 +243,7 @@ class ScraperManager:
     
     def get_available_sites(self) -> List[str]:
         """Get list of available scraper sites"""
-        return [name.capitalize() for name in self.registry.list_scrapers()]
+        return self.registry.get_registered_sites()
     
     def convert_price(self, amount: float, from_currency: str, to_currency: str = 'INR') -> Dict:
         """
