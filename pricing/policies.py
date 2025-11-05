@@ -44,7 +44,7 @@ def apply_site_policies(site: str, normalized_price: NormalizedPrice, context: D
             np.breakdown["policy:shipping"] = f"Free shipping applied (threshold {thr_dec} {np.target_currency})"
     # COD fee
     if context.get("cod") and isinstance(context.get("cod_fee"), (int, float)):
-        fee = _q2(Decimal(str(context["cod_fee"])) )
+        fee = _q2(Decimal(str(context["cod_fee"])))
         np = replace(np, tax=replace(np.tax, amount=_q2(np.tax.amount + fee)))
         np.breakdown["policy:cod"] = f"COD fee +{fee} {np.target_currency}"
 
