@@ -8,6 +8,7 @@ from datetime import datetime, timedelta
 import io
 import json
 import time
+import os
 from typing import List, Dict, Any
 from utils.export_utils import CSVExporter, PDFExporter
 from scrapers.scraper_manager import scraper_manager
@@ -15,7 +16,8 @@ from database.database import create_sqlite_db
 
 
 app = Flask(__name__, template_folder='../templates')
-app.secret_key = 'your-secret-key-change-this'  # Change in production
+# Use environment variable for secret key, fallback to dev key for development only
+app.secret_key = os.environ.get('SECRET_KEY', 'dev-key-only-change-in-production')
 
 # Initialize exporters
 csv_exporter = CSVExporter()

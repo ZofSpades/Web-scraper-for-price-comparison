@@ -336,9 +336,65 @@ The SQLite database includes the following tables:
 
 ---
 
-## 🔐 Environment Variables (Optional)
+## 🔐 Environment Variables & Security
 
-No environment variables required for basic operation. All configuration is handled automatically.
+### Development Environment
+For development and testing, the application uses default values and no environment variables are required.
+
+### Production Environment
+
+**⚠️ IMPORTANT: Set a secure SECRET_KEY for production deployments**
+
+The Flask application uses a session secret key for security. In production, you MUST set a secure random key:
+
+#### Setting SECRET_KEY:
+
+**On Windows (PowerShell):**
+```powershell
+$env:SECRET_KEY = "your-secure-random-key-here"
+python main.py
+```
+
+**On Linux/macOS:**
+```bash
+export SECRET_KEY="your-secure-random-key-here"
+python main.py
+```
+
+**Generate a secure random key:**
+```python
+python -c "import secrets; print(secrets.token_hex(32))"
+```
+
+### Example Production Setup:
+
+1. Generate a secure key:
+```bash
+python -c "import secrets; print(secrets.token_hex(32))"
+# Output: a1b2c3d4e5f6...
+```
+
+2. Set as environment variable:
+```bash
+export SECRET_KEY="a1b2c3d4e5f6..."  # Use your generated key
+```
+
+3. Run the application:
+```bash
+python main.py
+```
+
+### Other Optional Configuration:
+
+- **No other environment variables required** for basic operation
+- All scraper configuration is handled automatically
+- Database is auto-initialized with default settings
+
+**⚠️ Security Best Practices:**
+- Never commit `SECRET_KEY` to version control
+- Use different keys for development and production
+- Change keys periodically in production
+- Keep keys confidential and secure
 
 ---
 
@@ -395,9 +451,11 @@ For issues or questions:
 1. **Install Python 3.8+** and Google Chrome
 2. **Clone repository** and navigate to folder
 3. **Install dependencies:** `pip install -r requirements.txt`
-4. **Run application:** `python main.py`
+4. **Run application:** `python main.py` (for development)
 5. **Open browser:** http://127.0.0.1:5000
 6. **Start searching!** 🚀
+
+**⚠️ For Production:** Set `SECRET_KEY` environment variable before running (see Security section above)
 
 ---
 
