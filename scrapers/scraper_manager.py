@@ -1,6 +1,6 @@
 """
 Real-time scraping integration
-Coordinates scraping across multiple e-commerce sites
+Coordinates scraping across multiple e-commerce sites with advanced pricing utilities
 """
 
 from scrapers.scraper_registry import ScraperRegistry
@@ -9,6 +9,14 @@ from scrapers.amazon_scraper import AmazonScraper
 from scrapers.flipkart_scraper import FlipkartScraper
 from typing import List, Dict
 import concurrent.futures
+
+# Import pricing utilities for advanced price parsing and comparison
+from pricing.parser import parse_monetary, normalize_numeric_string, detect_currency
+from pricing.currency import CurrencyConverter
+from pricing.compare import rank_offers
+from pricing.types import ProductOffer, RawPrice, ParsedMonetary
+from pricing.normalize import normalize as normalize_price
+from decimal import Decimal
 
 
 class ScraperManager:
@@ -24,6 +32,9 @@ class ScraperManager:
         # Register scrapers
         self.registry.register(AmazonScraper())
         self.registry.register(FlipkartScraper())
+        
+        # Initialize currency converter with INR as base
+        self.currency_converter = CurrencyConverter(base_currency="INR")
     
     def search_product(self, query: str, sites: List[str] = None) -> List[Dict]:
         """
@@ -63,34 +74,126 @@ class ScraperManager:
     
     def _format_results(self, results: List[Dict]) -> List[Dict]:
         """
-        Format results to match frontend expectations
+        Format results using advanced pricing utilities
+        - Parse prices with multi-currency support
+        - Normalize prices to common currency (INR)
+        - Rank by best effective price
         """
-        formatted = []
+        offers = []
         
         for result in results:
             # Skip if error occurred
             if 'error' in result and result['title'] == 'Error':
                 continue
             
-            # Extract price value for sorting
-            price_value = self._extract_price_value(result.get('price', '0'))
-            
+            try:
+                # Create RawPrice object for pricing pipeline
+                raw_price = RawPrice(
+                    site=result.get('site', 'Unknown'),
+                    price_text=result.get('price', '₹0'),
+                    currency_hint='INR',  # Most Indian e-commerce sites use INR
+                    title=result.get('title', 'N/A'),
+                    url=result.get('link', '#'),
+                    rating=self._parse_rating(result.get('rating', 'N/A')),
+                    in_stock='in stock' in str(result.get('availability', '')).lower()
+                )
+                
+                # Normalize price using pricing utilities
+                normalized = normalize_price(raw_price, self.currency_converter, target_ccy='INR')
+                
+                # Create ProductOffer
+                offer = ProductOffer(
+                    site=result.get('site', 'Unknown'),
+                    title=result.get('title', 'N/A'),
+                    url=result.get('link', '#'),
+                    normalized=normalized,
+                    rating=raw_price.rating,
+                    in_stock=raw_price.in_stock,
+                    raw=raw_price
+                )
+                
+                offers.append(offer)
+                
+            except Exception as e:
+                print(f"[PRICING ERROR] Failed to process {result.get('site')}: {str(e)}")
+                # Fallback to basic formatting
+                price_value = self._extract_price_value(result.get('price', '0'))
+                offers.append(self._create_fallback_offer(result, price_value))
+        
+        # Rank offers using compare.py (best price first)
+        if offers:
+            ranked_offers = rank_offers(offers)
+        else:
+            ranked_offers = []
+        
+        # Convert ProductOffer objects to frontend format
+        formatted = []
+        for offer in ranked_offers:
             formatted.append({
-                'product_name': result.get('title', 'N/A'),
-                'price': price_value,
-                'price_display': result.get('price', 'N/A'),
-                'rating': result.get('rating', 'N/A'),
-                'reviews_count': 0,  # Not available from basic scraping
-                'availability': result.get('availability', 'Unknown'),
-                'seller': result.get('site', 'Unknown'),
-                'url': result.get('link', '#'),
-                'scraped_at': self._get_timestamp()
+                'product_name': offer.title or 'N/A',
+                'price': float(offer.normalized.effective.amount),
+                'price_display': f"₹{offer.normalized.effective.amount:,.2f}",
+                'price_breakdown': self._format_breakdown(offer.normalized),
+                'rating': str(offer.rating) if offer.rating else 'N/A',
+                'reviews_count': offer.reviews or 0,
+                'availability': 'In Stock' if offer.in_stock else 'Out of Stock',
+                'seller': offer.site,
+                'url': offer.url or '#',
+                'scraped_at': self._get_timestamp(),
+                'currency': offer.normalized.target_currency
             })
         
-        # Sort by price (lowest first)
-        formatted.sort(key=lambda x: x['price'] if x['price'] > 0 else float('inf'))
-        
         return formatted
+    
+    def _parse_rating(self, rating_str: str) -> float:
+        """Parse rating string to float"""
+        try:
+            if rating_str and rating_str != 'N/A':
+                return float(str(rating_str).strip())
+        except ValueError:
+            pass
+        return None
+    
+    def _format_breakdown(self, normalized) -> str:
+        """Format price breakdown for display"""
+        parts = []
+        if normalized.base.amount > 0:
+            parts.append(f"Base: ₹{normalized.base.amount:,.2f}")
+        if normalized.discount.amount > 0:
+            parts.append(f"Discount: -₹{normalized.discount.amount:,.2f}")
+        if normalized.shipping.amount > 0:
+            parts.append(f"Shipping: +₹{normalized.shipping.amount:,.2f}")
+        if normalized.tax.amount > 0:
+            parts.append(f"Tax: +₹{normalized.tax.amount:,.2f}")
+        return " | ".join(parts) if parts else "Base price"
+    
+    def _create_fallback_offer(self, result: Dict, price_value: float) -> ProductOffer:
+        """Create a basic ProductOffer when pricing pipeline fails"""
+        from pricing.types import NormalizedPrice
+        
+        parsed_price = ParsedMonetary(
+            amount=Decimal(str(price_value)),
+            currency='INR',
+            raw_text=result.get('price', '0')
+        )
+        
+        normalized = NormalizedPrice(
+            base=parsed_price,
+            shipping=ParsedMonetary(amount=Decimal('0'), currency='INR'),
+            tax=ParsedMonetary(amount=Decimal('0'), currency='INR'),
+            discount=ParsedMonetary(amount=Decimal('0'), currency='INR'),
+            effective=parsed_price,
+            target_currency='INR'
+        )
+        
+        return ProductOffer(
+            site=result.get('site', 'Unknown'),
+            title=result.get('title', 'N/A'),
+            url=result.get('link', '#'),
+            normalized=normalized,
+            rating=self._parse_rating(result.get('rating', 'N/A')),
+            in_stock='in stock' in str(result.get('availability', '')).lower()
+        )
     
     def _extract_price_value(self, price_str: str) -> float:
         """Extract numeric price value from string"""
@@ -120,6 +223,44 @@ class ScraperManager:
     def get_available_sites(self) -> List[str]:
         """Get list of available scraper sites"""
         return [name.capitalize() for name in self.registry.list_scrapers()]
+    
+    def convert_price(self, amount: float, from_currency: str, to_currency: str = 'INR') -> Dict:
+        """
+        Convert price between currencies
+        
+        Args:
+            amount: Price amount
+            from_currency: Source currency code (USD, EUR, GBP, etc.)
+            to_currency: Target currency code (default: INR)
+            
+        Returns:
+            Dictionary with converted amount and rate
+        """
+        try:
+            from_amount = Decimal(str(amount))
+            converted = self.currency_converter.convert(from_amount, from_currency, to_currency)
+            rate = converted / from_amount if from_amount > 0 else Decimal('1')
+            
+            return {
+                'original_amount': float(from_amount),
+                'original_currency': from_currency,
+                'converted_amount': float(converted),
+                'converted_currency': to_currency,
+                'exchange_rate': float(rate),
+                'display': f"{from_currency} {from_amount:,.2f} = {to_currency} {converted:,.2f}"
+            }
+        except Exception as e:
+            return {
+                'error': str(e),
+                'original_amount': amount,
+                'original_currency': from_currency,
+                'converted_amount': 0,
+                'converted_currency': to_currency
+            }
+    
+    def get_supported_currencies(self) -> List[str]:
+        """Get list of supported currencies"""
+        return ['INR', 'USD', 'EUR', 'GBP', 'JPY', 'AED', 'CAD', 'AUD']
 
 
 # Create global instance

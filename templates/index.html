@@ -241,13 +241,10 @@
                     body: searchForm
                 });
                 
-                // If successful, redirect will happen automatically
-                // If it returns HTML (results page), replace current page
+                // If successful, redirect to results page
                 if (response.ok) {
-                    const html = await response.text();
-                    document.open();
-                    document.write(html);
-                    document.close();
+                    // Simply redirect to the results page
+                    window.location.href = `/results?q=${encodeURIComponent(searchValue)}`;
                 } else {
                     throw new Error('Search failed');
                 }

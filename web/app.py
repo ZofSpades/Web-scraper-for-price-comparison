@@ -69,11 +69,17 @@ def search():
         return redirect(url_for('index'))
     
     try:
+        # Log search attempt
+        print(f"[SEARCH] Query: {query}, Sites: {sites}")
+        
         # Perform real-time scraping
         current_results = scraper_manager.search_product(query, sites if sites else None)
         
+        print(f"[SEARCH] Results count: {len(current_results)}")
+        print(f"[SEARCH] Results: {current_results}")
+        
         if not current_results:
-            flash('No results found. Try a different search term.', 'warning')
+            flash('No results found. The scrapers may be blocked or the product was not found. Try a simpler search term like "iPhone 15".', 'warning')
             return redirect(url_for('index'))
         
         return render_template('results.html', 
@@ -81,8 +87,28 @@ def search():
                              query=query,
                              total=len(current_results))
     except Exception as e:
+        print(f"[ERROR] Search failed: {str(e)}")
+        import traceback
+        traceback.print_exc()
         flash(f'An error occurred while searching: {str(e)}', 'error')
         return redirect(url_for('index'))
+
+
+@app.route('/results', methods=['GET'])
+def results():
+    """Display cached results (for when URL is accessed directly)"""
+    global current_results
+    
+    query = request.args.get('q', 'recent search')
+    
+    if not current_results:
+        flash('No results available. Please perform a new search.', 'info')
+        return redirect(url_for('index'))
+    
+    return render_template('results.html', 
+                         results=current_results, 
+                         query=query,
+                         total=len(current_results))
 
 
 @app.route('/api/search', methods=['POST'])
@@ -110,6 +136,29 @@ def api_search():
             'success': False,
             'error': str(e)
         }), 500
+
+
+@app.route('/api/convert', methods=['POST'])
+def api_convert_currency():
+    """API endpoint for currency conversion"""
+    data = request.get_json()
+    amount = data.get('amount', 0)
+    from_currency = data.get('from', 'USD')
+    to_currency = data.get('to', 'INR')
+    
+    try:
+        result = scraper_manager.convert_price(amount, from_currency, to_currency)
+        return jsonify(result)
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/currencies', methods=['GET'])
+def api_supported_currencies():
+    """API endpoint to get supported currencies"""
+    return jsonify({
+        'currencies': scraper_manager.get_supported_currencies()
+    })
 
 
 @app.route('/export/csv', methods=['POST'])

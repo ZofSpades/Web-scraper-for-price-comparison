@@ -252,22 +252,35 @@
                         <th>Site</th>
                         <th>Title</th>
                         <th>Price</th>
+                        <th>Price Details</th>
                         <th>Rating</th>
                         <th>Availability</th>
                         <th>Link</th>
                     </tr>
                 </thead>
                 <tbody>
-                    {% for i, item in enumerate(results) %}
-                    <tr class="{% if (start_idx + i) == cheapest_idx %}cheapest-row{% endif %}">
+                    {% for item in results %}
+                    <tr class="{% if loop.index0 == 0 %}cheapest-row{% endif %}">
                         <td>
-                            {{ item.site }}
-                            {% if (start_idx + i) == cheapest_idx %}
+                            {{ item.seller }}
+                            {% if loop.index0 == 0 %}
                             <span class="cheapest-badge">Best Price</span>
                             {% endif %}
                         </td>
-                        <td>{{ item.title }}</td>
-                        <td class="price-cell">{{ item.price }}</td>
+                        <td>{{ item.product_name }}</td>
+                        <td class="price-cell">
+                            {{ item.price_display }}
+                            {% if item.currency and item.currency != 'INR' %}
+                            <small>({{ item.currency }})</small>
+                            {% endif %}
+                        </td>
+                        <td style="font-size: 0.85em; color: #666;">
+                            {% if item.price_breakdown %}
+                            {{ item.price_breakdown }}
+                            {% else %}
+                            Base price
+                            {% endif %}
+                        </td>
                         <td class="rating-cell">⭐ {{ item.rating }}</td>
                         <td>
                             <span class="
@@ -280,7 +293,7 @@
                             </span>
                         </td>
                         <td class="link-cell">
-                            <a href="{{ item.link }}" target="_blank">View Product →</a>
+                            <a href="{{ item.url }}" target="_blank">View Product →</a>
                         </td>
                     </tr>
                     {% endfor %}
@@ -290,28 +303,7 @@
         
         <div class="pagination">
             <div class="pagination-info">
-                Showing {{ start_idx + 1 }}-{{ start_idx + results|length }} of {{ pagination.total_items }} results
-            </div>
-            <div class="pagination-buttons">
-                {% if pagination.has_prev %}
-                <a href="?page={{ pagination.current_page - 1 }}">← Previous</a>
-                {% else %}
-                <span>← Previous</span>
-                {% endif %}
-                
-                <div class="page-numbers">
-                    {% for page_num in range(1, pagination.total_pages + 1) %}
-                    <a href="?page={{ page_num }}" class="page-number {% if page_num == pagination.current_page %}active{% endif %}">
-                        {{ page_num }}
-                    </a>
-                    {% endfor %}
-                </div>
-                
-                {% if pagination.has_next %}
-                <a href="?page={{ pagination.current_page + 1 }}">Next →</a>
-                {% else %}
-                <span>Next →</span>
-                {% endif %}
+                Showing all {{ total }} results
             </div>
         </div>
         {% else %}

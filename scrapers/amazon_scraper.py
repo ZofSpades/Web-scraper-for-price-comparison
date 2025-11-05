@@ -28,8 +28,13 @@ class AmazonScraper(HybridScraper):
         """
         # Check if input is URL or search query
         if input_data.startswith('http'):
-            # Direct product URL
-            return super().scrape(input_data)
+            # Only scrape if it's actually an Amazon URL
+            if 'amazon.in' in input_data.lower() or 'amazon.com' in input_data.lower():
+                # Direct product URL
+                return super().scrape(input_data)
+            else:
+                # Not an Amazon URL, search for the product instead
+                return self._search_and_scrape(input_data)
         else:
             # Search query - get first result
             return self._search_and_scrape(input_data)
@@ -86,10 +91,15 @@ class AmazonScraper(HybridScraper):
             
             soup = BeautifulSoup(response.content, 'html.parser')
             
+            # Debug logging
+            print(f"[AMAZON DEBUG] Scraping: {input_data}")
+            
             title = self._extract_title(soup)
             price = self._extract_price(soup)
             rating = self._extract_rating(soup)
             availability = self._extract_availability(soup)
+            
+            print(f"[AMAZON DEBUG] Title: {title}, Price: {price}, Rating: {rating}")
             
             return {
                 'site': self.site_name,
@@ -101,6 +111,7 @@ class AmazonScraper(HybridScraper):
             }
             
         except Exception as e:
+            print(f"[AMAZON ERROR] {str(e)}")
             raise Exception(f"Static scraping failed: {str(e)}")
     
     def _scrape_with_selenium(self, input_data: str) -> Dict:
@@ -159,19 +170,30 @@ class AmazonScraper(HybridScraper):
             {'class_': 'a-price-whole'},
             {'class_': 'a-price'},
             {'class_': 'apexPriceToPay'},
+            {'class_': 'a-offscreen'},
+            {'id': 'priceblock_ourprice'},
+            {'id': 'priceblock_dealprice'},
         ]
         
         for pattern in price_patterns:
-            elements = soup.find_all('span', pattern)
-            for element in elements:
+            if 'id' in pattern:
+                element = soup.find('span', pattern)
+            else:
+                elements = soup.find_all('span', pattern)
+                element = elements[0] if elements else None
+            
+            if element:
                 text = element.get_text().strip()
                 # Look for price with ₹ symbol or digits
-                match = re.search(r'₹?\s*[\d,]+\.?\d*', text)
+                match = re.search(r'₹\s*[\d,]+', text)
                 if match:
-                    price = match.group().replace(',', '')
-                    if '₹' not in price:
-                        price = '₹' + price
-                    return price
+                    return match.group()
+        
+        # Search entire page for price pattern
+        all_text = soup.get_text()
+        price_match = re.search(r'₹\s*[\d,]+', all_text)
+        if price_match:
+            return price_match.group()
         
         return "Price not available"
     

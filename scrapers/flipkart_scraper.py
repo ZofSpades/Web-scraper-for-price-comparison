@@ -26,8 +26,15 @@ class FlipkartScraper(HybridScraper):
         """
         Scrape Flipkart for product
         """
+        # If it's a URL, check if it's a Flipkart URL
         if input_data.startswith('http'):
-            return super().scrape(input_data)
+            # Only scrape if it's actually a Flipkart URL
+            if 'flipkart.com' in input_data.lower():
+                return super().scrape(input_data)
+            else:
+                # Not a Flipkart URL, search for the product instead
+                # Extract product name from URL if possible, otherwise search
+                return self._search_and_scrape(input_data)
         else:
             return self._search_and_scrape(input_data)
     
@@ -76,10 +83,15 @@ class FlipkartScraper(HybridScraper):
             
             soup = BeautifulSoup(response.content, 'html.parser')
             
+            # Debug: Print page structure
+            print(f"[FLIPKART DEBUG] Scraping: {input_data}")
+            
             title = self._extract_title(soup)
             price = self._extract_price(soup)
             rating = self._extract_rating(soup)
             availability = self._extract_availability(soup)
+            
+            print(f"[FLIPKART DEBUG] Title: {title}, Price: {price}, Rating: {rating}")
             
             return {
                 'site': self.site_name,
@@ -91,6 +103,7 @@ class FlipkartScraper(HybridScraper):
             }
             
         except Exception as e:
+            print(f"[FLIPKART ERROR] {str(e)}")
             raise Exception(f"Static scraping failed: {str(e)}")
     
     def _scrape_with_selenium(self, input_data: str) -> Dict:
@@ -128,9 +141,12 @@ class FlipkartScraper(HybridScraper):
     
     def _extract_title(self, soup: BeautifulSoup) -> str:
         """Extract title"""
+        # Try multiple Flipkart title selectors
         selectors = [
-            {'class_': 'B_NuCI'},
-            {'class_': '_35KyD6'},
+            {'class_': 'B_NuCI'},           # Common product title
+            {'class_': '_35KyD6'},          # Alternative title
+            {'class_': 'VU-ZEz'},           # New layout
+            {'class_': 'aMaAEs'},           # Product name class
         ]
         
         for selector in selectors:
@@ -138,13 +154,23 @@ class FlipkartScraper(HybridScraper):
             if element:
                 return element.get_text().strip()
         
+        # Try h1 tags
+        h1_tags = soup.find_all('h1')
+        for h1 in h1_tags:
+            text = h1.get_text().strip()
+            if len(text) > 10:  # Likely a product title
+                return text
+        
         return "Title not found"
     
     def _extract_price(self, soup: BeautifulSoup) -> str:
         """Extract price"""
+        # Try multiple price selectors
         price_patterns = [
             {'class_': '_30jeq3'},
             {'class_': '_30jeq3 _16Jk6d'},
+            {'class_': 'Nx9bqj CxhGGd'},   # New price class
+            {'class_': '_1vC4OE'},
         ]
         
         for pattern in price_patterns:
@@ -155,13 +181,33 @@ class FlipkartScraper(HybridScraper):
                 if match:
                     return match.group()
         
+        # Try looking for any element with ₹ symbol
+        all_text = soup.get_text()
+        price_match = re.search(r'₹[\d,]+', all_text)
+        if price_match:
+            return price_match.group()
+        
         return "Price not available"
     
     def _extract_rating(self, soup: BeautifulSoup) -> str:
         """Extract rating"""
-        rating_div = soup.find('div', {'class': '_3LWZlK'})
-        if rating_div:
-            match = re.search(r'(\d+\.?\d*)', rating_div.get_text())
+        # Try multiple rating selectors
+        rating_selectors = [
+            {'class_': '_3LWZlK'},
+            {'class_': 'XQDdHH'},
+        ]
+        
+        for selector in rating_selectors:
+            rating_div = soup.find('div', selector)
+            if rating_div:
+                match = re.search(r'(\d+\.?\d*)', rating_div.get_text())
+                if match:
+                    return match.group(1)
+        
+        # Look for star ratings in text
+        rating_text = soup.find(text=re.compile(r'\d+\.\d+\s*★'))
+        if rating_text:
+            match = re.search(r'(\d+\.?\d*)', rating_text)
             if match:
                 return match.group(1)
         
