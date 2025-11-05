@@ -9,6 +9,7 @@ import io
 import json
 from typing import List, Dict, Any
 from utils.export_utils import CSVExporter, PDFExporter
+from scrapers.scraper_manager import scraper_manager
 
 
 app = Flask(__name__, template_folder='../templates')
@@ -28,9 +29,36 @@ def index():
     return render_template('index.html')
 
 
+@app.route('/submit_input', methods=['POST'])
+def submit_input():
+    """Handle input validation from search form (for compatibility with index.html template)"""
+    from utils.input_handler import validate_input
+    
+    # Get input from form
+    user_input = request.form.get('search_input', '').strip()
+    
+    # Validate the input
+    result = validate_input(user_input)
+    
+    if result['valid']:
+        return jsonify({
+            'success': True,
+            'message': f"Valid {result['type'].replace('_', ' ')} received!",
+            'type': result['type'],
+            'value': result['value']
+        })
+    else:
+        return jsonify({
+            'success': False,
+            'message': 'Invalid input. Please enter a valid product name or URL.',
+            'type': None,
+            'value': None
+        }), 400
+
+
 @app.route('/search', methods=['POST'])
 def search():
-    """Handle search request and display results"""
+    """Handle search request and display results with real-time scraping"""
     global current_results
     
     query = request.form.get('query', '')
@@ -40,19 +68,26 @@ def search():
         flash('Please enter a search query', 'error')
         return redirect(url_for('index'))
     
-    # In production, call actual scraper here
-    # For demo, generate sample data
-    current_results = generate_sample_results(query)
-    
-    return render_template('results.html', 
-                         results=current_results, 
-                         query=query,
-                         total=len(current_results))
+    try:
+        # Perform real-time scraping
+        current_results = scraper_manager.search_product(query, sites if sites else None)
+        
+        if not current_results:
+            flash('No results found. Try a different search term.', 'warning')
+            return redirect(url_for('index'))
+        
+        return render_template('results.html', 
+                             results=current_results, 
+                             query=query,
+                             total=len(current_results))
+    except Exception as e:
+        flash(f'An error occurred while searching: {str(e)}', 'error')
+        return redirect(url_for('index'))
 
 
 @app.route('/api/search', methods=['POST'])
 def api_search():
-    """API endpoint for search"""
+    """API endpoint for search with real-time scraping"""
     data = request.get_json()
     query = data.get('query', '')
     sites = data.get('sites', ['all'])
@@ -60,15 +95,21 @@ def api_search():
     if not query:
         return jsonify({'error': 'Query required'}), 400
     
-    # In production, call actual scraper
-    results = generate_sample_results(query)
-    
-    return jsonify({
-        'success': True,
-        'query': query,
-        'total': len(results),
-        'results': results
-    })
+    try:
+        # Perform real-time scraping
+        results = scraper_manager.search_product(query, sites)
+        
+        return jsonify({
+            'success': True,
+            'query': query,
+            'total': len(results),
+            'results': results
+        })
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
 
 
 @app.route('/export/csv', methods=['POST'])
