@@ -6,8 +6,8 @@ Orchestrates scraping across multiple sites with retry and timeout logic.
 from typing import Dict, List, Optional
 import concurrent.futures
 import time
-from base_scraper import BaseScraper
-from scraper_registry import ScraperRegistry
+from scrapers.base_scraper import BaseScraper
+from scrapers.scraper_registry import ScraperRegistry
 
 
 class ScraperController:

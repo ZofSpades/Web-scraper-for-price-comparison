@@ -8,10 +8,10 @@ from datetime import datetime
 import io
 import time
 from typing import List, Dict, Any
-from export_utils import CSVExporter, PDFExporter
-from database import create_sqlite_db
+from utils.export_utils import CSVExporter, PDFExporter
+from database.database import create_sqlite_db
 
-app = Flask(__name__)
+app = Flask(__name__, template_folder='../templates')
 app.secret_key = 'your-secret-key-change-this'
 
 # Initialize exporters

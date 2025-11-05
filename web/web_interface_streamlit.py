@@ -4,7 +4,7 @@ Provides a minimal web interface with a search bar for product name or URL input
 """
 
 import streamlit as st
-from input_handler import validate_input
+from utils.input_handler import validate_input
 
 
 def main():

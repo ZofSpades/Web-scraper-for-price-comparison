@@ -4,7 +4,7 @@ Manages dynamic registration and unregistration of scraper implementations.
 """
 
 from typing import Dict, List, Optional
-from base_scraper import BaseScraper
+from scrapers.base_scraper import BaseScraper
 import threading
 
 

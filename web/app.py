@@ -8,10 +8,10 @@ from datetime import datetime
 import io
 import json
 from typing import List, Dict, Any
-from export_utils import CSVExporter, PDFExporter
+from utils.export_utils import CSVExporter, PDFExporter
 
 
-app = Flask(__name__)
+app = Flask(__name__, template_folder='../templates')
 app.secret_key = 'your-secret-key-change-this'  # Change in production
 
 # Initialize exporters
