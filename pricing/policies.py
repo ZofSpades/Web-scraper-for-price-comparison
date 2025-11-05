@@ -34,7 +34,6 @@ def _recompute_effective(np: NormalizedPrice) -> NormalizedPrice:
 
 def apply_site_policies(site: str, normalized_price: NormalizedPrice, context: Dict) -> NormalizedPrice:
     np = normalized_price
-    notes = []
     # Free shipping threshold
     thr = context.get("free_shipping_threshold")
     if isinstance(thr, (int, float)):
