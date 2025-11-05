@@ -265,9 +265,6 @@ def export_pdf():
     else:
         export_data = current_results
     
-    # Generate PDF in memory
-    pdf_bytes = io.BytesIO()
-    
     # Generate PDF using temporary file with cross-platform compatibility
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     
