@@ -6,7 +6,6 @@ Scrapes product data from Croma.com (Electronics)
 from scrapers.hybrid_scraper import HybridScraper
 from bs4 import BeautifulSoup
 import requests
-import re
 from typing import Dict
 import urllib.parse
 
