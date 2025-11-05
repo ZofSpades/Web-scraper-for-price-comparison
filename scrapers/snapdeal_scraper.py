@@ -7,8 +7,11 @@ from scrapers.hybrid_scraper import HybridScraper
 from bs4 import BeautifulSoup
 import requests
 import re
+import logging
 from typing import Dict
 import urllib.parse
+
+logger = logging.getLogger(__name__)
 
 
 class SnapdealScraper(HybridScraper):
@@ -56,6 +59,7 @@ class SnapdealScraper(HybridScraper):
             return super().scrape(product_link)
             
         except Exception as e:
+            logger.error(f"Snapdeal search failed for query '{query}': {str(e)}", exc_info=True)
             return self.create_error_result(f"Search failed: {str(e)}")
     
     def _extract_first_product_link(self, soup: BeautifulSoup) -> str:
@@ -99,6 +103,7 @@ class SnapdealScraper(HybridScraper):
             }
             
         except Exception as e:
+            logger.error(f"Snapdeal static scraping failed for URL '{input_data}': {str(e)}", exc_info=True)
             return self.create_error_result(f"Static scraping failed: {str(e)}")
     
     def _extract_title(self, soup: BeautifulSoup) -> str:
@@ -115,7 +120,8 @@ class SnapdealScraper(HybridScraper):
                 return title_tag.get_text(strip=True)
             
             return "Title not available"
-        except Exception:
+        except Exception as e:
+            logger.debug(f"Snapdeal title extraction failed: {str(e)}")
             return "Title not available"
     
     def _extract_price(self, soup: BeautifulSoup) -> str:
@@ -132,7 +138,8 @@ class SnapdealScraper(HybridScraper):
                 return f"₹{price_tag.get_text(strip=True)}"
             
             return "Price not available"
-        except Exception:
+        except Exception as e:
+            logger.debug(f"Snapdeal price extraction failed: {str(e)}")
             return "Price not available"
     
     def _extract_rating(self, soup: BeautifulSoup) -> str:
@@ -148,7 +155,8 @@ class SnapdealScraper(HybridScraper):
                 return rating_tag.get_text(strip=True)
             
             return "N/A"
-        except Exception:
+        except Exception as e:
+            logger.debug(f"Snapdeal rating extraction failed: {str(e)}")
             return "N/A"
     
     def _extract_availability(self, soup: BeautifulSoup) -> str:
@@ -169,7 +177,8 @@ class SnapdealScraper(HybridScraper):
                     return "Out of Stock"
             
             return "In Stock"
-        except Exception:
+        except Exception as e:
+            logger.debug(f"Snapdeal availability extraction failed: {str(e)}")
             return "In Stock"
     
     def _scrape_with_selenium(self, input_data: str) -> Dict:
@@ -206,4 +215,5 @@ class SnapdealScraper(HybridScraper):
             }
             
         except Exception as e:
+            logger.error(f"Snapdeal Selenium scraping failed for URL '{input_data}': {str(e)}", exc_info=True)
             return self.create_error_result(f"Dynamic scraping failed: {str(e)}")
