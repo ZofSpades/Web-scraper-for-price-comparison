@@ -156,7 +156,7 @@ class ScraperManager:
                 'price_display': f"₹{offer.normalized.effective.amount:,.2f}",
                 'price_breakdown': self._format_breakdown(offer.normalized),
                 'rating': str(offer.rating) if offer.rating else 'N/A',
-                'reviews_count': offer.reviews or 0,
+                'reviews': offer.reviews or 0,
                 'availability': 'In Stock' if offer.in_stock else 'Out of Stock',
                 'seller': offer.site,
                 'url': offer.url or '#',
