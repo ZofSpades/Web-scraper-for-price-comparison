@@ -172,6 +172,7 @@ class ScraperManager:
             if rating_str and rating_str != 'N/A':
                 return float(str(rating_str).strip())
         except ValueError:
+            # Invalid rating format, will return None below
             pass
         return None
     
