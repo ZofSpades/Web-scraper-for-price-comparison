@@ -223,40 +223,40 @@
             e.preventDefault();
             
             const formData = new FormData(form);
+            const searchValue = formData.get('search_input');
+            
+            // Show loading state
+            resultContainer.style.display = 'block';
+            resultContainer.className = 'result-container result-success';
+            resultTitle.innerHTML = '⏳ Processing...';
+            resultDetails.innerHTML = '<p>Scraping prices from multiple sites. This may take a few seconds...</p>';
             
             try {
-                const response = await fetch('/submit_input', {
+                // Send search request directly
+                const searchForm = new FormData();
+                searchForm.append('query', searchValue);
+                
+                const response = await fetch('/search', {
                     method: 'POST',
-                    body: formData
+                    body: searchForm
                 });
                 
-                const data = await response.json();
-                
-                // Show result container
-                resultContainer.style.display = 'block';
-                
-                if (data.success) {
-                    resultContainer.className = 'result-container result-success';
-                    resultTitle.innerHTML = '✓ ' + data.message;
-                    resultDetails.innerHTML = `
-                        <p><strong>Type:</strong> ${data.type.replace('_', ' ').charAt(0).toUpperCase() + data.type.replace('_', ' ').slice(1)}</p>
-                        <p><strong>Status:</strong> Valid</p>
-                        <div class="result-value">${data.value}</div>
-                    `;
+                // If successful, redirect will happen automatically
+                // If it returns HTML (results page), replace current page
+                if (response.ok) {
+                    const html = await response.text();
+                    document.open();
+                    document.write(html);
+                    document.close();
                 } else {
-                    resultContainer.className = 'result-container result-error';
-                    resultTitle.innerHTML = '✗ Invalid Input';
-                    resultDetails.innerHTML = `<p>${data.message}</p>`;
+                    throw new Error('Search failed');
                 }
-                
-                // Scroll to result
-                resultContainer.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
                 
             } catch (error) {
                 resultContainer.style.display = 'block';
                 resultContainer.className = 'result-container result-error';
                 resultTitle.innerHTML = '✗ Error';
-                resultDetails.innerHTML = '<p>An error occurred. Please try again.</p>';
+                resultDetails.innerHTML = '<p>An error occurred while searching. Please try again.</p>';
             }
         });
     </script>
