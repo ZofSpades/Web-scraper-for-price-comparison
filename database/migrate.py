@@ -7,7 +7,7 @@ Supports both SQLite and MySQL databases
 import argparse
 import sys
 import os
-from database.database import DatabaseConfig, DatabaseManager, SearchHistoryDB
+from .database import DatabaseConfig, DatabaseManager, SearchHistoryDB
 
 
 def init_sqlite(db_path='scraper_history.db', schema_file='schema.sql'):
