@@ -9,6 +9,7 @@ import io
 import json
 import time
 import os
+import tempfile
 from typing import List, Dict, Any
 from utils.export_utils import CSVExporter, PDFExporter
 from scrapers.scraper_manager import scraper_manager
@@ -267,19 +268,23 @@ def export_pdf():
     # Generate PDF in memory
     pdf_bytes = io.BytesIO()
     
-    # Generate PDF (temporarily save to file, then read)
+    # Generate PDF using temporary file with cross-platform compatibility
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    temp_filename = f"/tmp/report_{timestamp}.pdf"
     
-    pdf_exporter.generate_report(export_data, filename=temp_filename)
+    # Create temporary file that works on both Windows and Unix
+    with tempfile.NamedTemporaryFile(mode='wb', suffix='.pdf', delete=False) as temp_file:
+        temp_filename = temp_file.name
     
-    # Read the file into memory
-    with open(temp_filename, 'rb') as f:
-        pdf_bytes = io.BytesIO(f.read())
-    
-    # Clean up temp file
-    import os
-    os.remove(temp_filename)
+    try:
+        pdf_exporter.generate_report(export_data, filename=temp_filename)
+        
+        # Read the file into memory
+        with open(temp_filename, 'rb') as f:
+            pdf_bytes = io.BytesIO(f.read())
+    finally:
+        # Clean up temp file
+        if os.path.exists(temp_filename):
+            os.remove(temp_filename)
     
     filename = f"price_comparison_report_{timestamp}.pdf"
     
