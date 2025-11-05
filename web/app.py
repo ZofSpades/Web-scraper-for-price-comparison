@@ -4,9 +4,8 @@ Provides web interface for scraper with CSV/PDF export buttons and search histor
 """
 
 from flask import Flask, render_template, request, jsonify, send_file, flash, redirect, url_for
-from datetime import datetime, timedelta
+from datetime import datetime
 import io
-import json
 import time
 import os
 import tempfile
