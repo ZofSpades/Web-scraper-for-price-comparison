@@ -65,7 +65,7 @@ class CurrencyConverter:
     """
 
     base_currency: str = "INR"
-    fetcher: RateFetcher = _snapshot_fetcher
+    fetcher: RateFetcher = field(default_factory=lambda: _snapshot_fetcher)
     ttl_seconds: int = 3600
     _cache: Dict[Tuple[str, str], Tuple[float, Decimal]] = field(default_factory=dict)
 
