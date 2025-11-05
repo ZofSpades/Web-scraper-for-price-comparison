@@ -140,3 +140,7 @@ scraper.log
 *.pdf
 exports/
 data/
+
+# Database files
+scraper_history.db
+*.db
