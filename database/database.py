@@ -26,8 +26,42 @@ class DatabaseConfig:
         Initialize database configuration
         
         Args:
-            db_type: 'sqlite' or 'mysql'
-            **kwargs: Additional configuration for MySQL (host, user, password, database)
+            db_type (str): Database type - 'sqlite' or 'mysql'
+            **kwargs: Additional database configuration parameters
+                
+                For SQLite:
+                    database (str): Path to SQLite database file
+                        Default: 'scraper_history.db'
+                
+                For MySQL:
+                    host (str): MySQL server hostname or IP address
+                        Default: 'localhost'
+                    user (str): MySQL username for authentication
+                        Default: 'root'
+                    password (str): MySQL password for authentication
+                        Default: '' (empty string)
+                    database (str): MySQL database name
+                        Default: 'scraper_history'
+                    port (int): MySQL server port number
+                        Default: 3306
+        
+        Raises:
+            ImportError: If MySQL is selected but mysql-connector-python is not installed
+            ValueError: If an unsupported database type is specified
+        
+        Example:
+            # SQLite configuration
+            config = DatabaseConfig(db_type='sqlite', database='my_data.db')
+            
+            # MySQL configuration
+            config = DatabaseConfig(
+                db_type='mysql',
+                host='localhost',
+                user='admin',
+                password='secret',
+                database='scraper_db',
+                port=3306
+            )
         """
         self.db_type = db_type.lower()
         
