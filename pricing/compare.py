@@ -13,7 +13,6 @@ Stable and deterministic across runs.
 
 from __future__ import annotations
 
-from decimal import Decimal
 from typing import List
 
 from .types import ProductOffer
