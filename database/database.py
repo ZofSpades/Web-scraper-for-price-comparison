@@ -12,7 +12,7 @@ except ImportError:
     MYSQL_AVAILABLE = False
     
 from datetime import datetime, timedelta
-from typing import List, Dict, Any, Optional, Tuple
+from typing import List, Dict, Any, Optional
 from contextlib import contextmanager
 import os
 import json
