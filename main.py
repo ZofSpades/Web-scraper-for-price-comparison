@@ -2,7 +2,6 @@
 Main entry point for Web Scraper Price Comparison Tool
 """
 
-import sys
 from web.app import app as web_app
 
 def main():
