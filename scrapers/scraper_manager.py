@@ -11,10 +11,8 @@ from scrapers.snapdeal_scraper import SnapdealScraper
 from scrapers.myntra_scraper import MyntraScraper
 from scrapers.croma_scraper import CromaScraper
 from typing import List, Dict
-import concurrent.futures
 
 # Import pricing utilities for advanced price parsing and comparison
-from pricing.parser import parse_monetary, normalize_numeric_string, detect_currency
 from pricing.currency import CurrencyConverter
 from pricing.compare import rank_offers
 from pricing.types import ProductOffer, RawPrice, ParsedMonetary
