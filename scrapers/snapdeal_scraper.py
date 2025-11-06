@@ -6,7 +6,6 @@ Scrapes product data from Snapdeal.com
 from scrapers.hybrid_scraper import HybridScraper
 from bs4 import BeautifulSoup
 import requests
-import re
 import logging
 from typing import Dict
 import urllib.parse
