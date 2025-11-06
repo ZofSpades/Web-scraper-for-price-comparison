@@ -23,7 +23,7 @@ No network calls are made from core logic. CurrencyConverter uses a snapshot.
 
 from __future__ import annotations
 
-from typing import Dict, List, Optional
+from typing import Dict, List
 
 from .compare import rank_offers
 from .currency import CurrencyConverter
