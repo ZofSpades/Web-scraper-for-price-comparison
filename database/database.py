@@ -342,9 +342,14 @@ class SearchHistoryDB:
         try:
             site_id = self.db.execute_query(sql, (site_name, site_url), fetch=False)
             return site_id
-        except:
+        except Exception as e:
             # Site might already exist, get its ID
-            return self.get_site_by_name(site_name)['site_id']
+            existing_site = self.get_site_by_name(site_name)
+            if existing_site:
+                return existing_site['site_id']
+            else:
+                # Re-raise the original exception if site doesn't exist
+                raise
     
     def get_site_by_name(self, site_name: str) -> Optional[Dict]:
         """
