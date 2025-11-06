@@ -183,6 +183,15 @@
         <h1>Web Scraper Price Comparison Tool</h1>
         <p class="subtitle">Enter a product name or URL to begin</p>
         
+        <div style="text-align: center; margin-bottom: 20px;">
+            <a href="/history" style="color: #667eea; text-decoration: none; font-weight: 600; font-size: 14px; margin-right: 15px;">
+                📜 Search History
+            </a>
+            <a href="/statistics" style="color: #667eea; text-decoration: none; font-weight: 600; font-size: 14px;">
+                📊 Statistics
+            </a>
+        </div>
+        
         <form class="search-form" id="searchForm">
             <div class="input-group">
                 <input 
@@ -223,40 +232,37 @@
             e.preventDefault();
             
             const formData = new FormData(form);
+            const searchValue = formData.get('search_input');
+            
+            // Show loading state
+            resultContainer.style.display = 'block';
+            resultContainer.className = 'result-container result-success';
+            resultTitle.innerHTML = '⏳ Processing...';
+            resultDetails.innerHTML = '<p>Scraping prices from multiple sites. This may take a few seconds...</p>';
             
             try {
-                const response = await fetch('/submit_input', {
+                // Send search request directly
+                const searchForm = new FormData();
+                searchForm.append('query', searchValue);
+                
+                const response = await fetch('/search', {
                     method: 'POST',
-                    body: formData
+                    body: searchForm
                 });
                 
-                const data = await response.json();
-                
-                // Show result container
-                resultContainer.style.display = 'block';
-                
-                if (data.success) {
-                    resultContainer.className = 'result-container result-success';
-                    resultTitle.innerHTML = '✓ ' + data.message;
-                    resultDetails.innerHTML = `
-                        <p><strong>Type:</strong> ${data.type.replace('_', ' ').charAt(0).toUpperCase() + data.type.replace('_', ' ').slice(1)}</p>
-                        <p><strong>Status:</strong> Valid</p>
-                        <div class="result-value">${data.value}</div>
-                    `;
+                // If successful, redirect to results page
+                if (response.ok) {
+                    // Simply redirect to the results page
+                    window.location.href = `/results?q=${encodeURIComponent(searchValue)}`;
                 } else {
-                    resultContainer.className = 'result-container result-error';
-                    resultTitle.innerHTML = '✗ Invalid Input';
-                    resultDetails.innerHTML = `<p>${data.message}</p>`;
+                    throw new Error('Search failed');
                 }
-                
-                // Scroll to result
-                resultContainer.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
                 
             } catch (error) {
                 resultContainer.style.display = 'block';
                 resultContainer.className = 'result-container result-error';
                 resultTitle.innerHTML = '✗ Error';
-                resultDetails.innerHTML = '<p>An error occurred. Please try again.</p>';
+                resultDetails.innerHTML = '<p>An error occurred while searching. Please try again.</p>';
             }
         });
     </script>

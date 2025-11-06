@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Search History - Price Comparison Tool</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 30px 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 16px;
+            padding: 40px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 35px;
+            padding-bottom: 25px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+
+        .header h1 {
+            color: #2d3748;
+            font-size: 2.5em;
+            margin-bottom: 8px;
+            font-weight: 700;
+        }
+
+        .header p {
+            color: #718096;
+            font-size: 1.1em;
+        }
+
+        .nav-links {
+            margin-bottom: 35px;
+            text-align: center;
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .nav-links a {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 10px 20px;
+            background: white;
+            color: #667eea;
+            text-decoration: none;
+            border-radius: 8px;
+            border: 2px solid #667eea;
+            transition: all 0.3s ease;
+            font-weight: 600;
+            font-size: 0.95em;
+        }
+
+        .nav-links a:hover {
+            background: #667eea;
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+        }
+
+        .search-stats {
+            background: #f7fafc;
+            padding: 25px;
+            border-radius: 12px;
+            margin-bottom: 30px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+        }
+
+        .stat-box {
+            text-align: center;
+            padding: 25px 20px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            border: 1px solid #e2e8f0;
+            transition: all 0.3s ease;
+        }
+
+        .stat-box:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.15);
+        }
+
+        .stat-box h3 {
+            color: #667eea;
+            font-size: 2.5em;
+            margin-bottom: 8px;
+            font-weight: 700;
+        }
+
+        .stat-box p {
+            color: #718096;
+            font-size: 0.95em;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .history-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 25px;
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        }
+
+        .history-table thead {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .history-table th,
+        .history-table td {
+            padding: 16px;
+            text-align: left;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .history-table th {
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.85em;
+            letter-spacing: 0.5px;
+        }
+
+        .history-table tbody tr {
+            transition: background 0.2s ease;
+        }
+
+        .history-table tbody tr:hover {
+            background: #f7fafc;
+        }
+
+        .history-table tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        .query-cell {
+            max-width: 300px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .query-cell:hover {
+            overflow: visible;
+            white-space: normal;
+            word-break: break-all;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.8em;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .status-completed {
+            background: #c6f6d5;
+            color: #22543d;
+        }
+
+        .status-failed {
+            background: #fed7d7;
+            color: #742a2a;
+        }
+
+        .status-in_progress {
+            background: #feebc8;
+            color: #7c2d12;
+        }
+
+        .view-link {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 600;
+            transition: color 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .view-link:hover {
+            color: #764ba2;
+            text-decoration: underline;
+        }
+
+        .no-results {
+            text-align: center;
+            padding: 60px 20px;
+            color: #718096;
+        }
+
+        .no-results-icon {
+            font-size: 5em;
+            margin-bottom: 20px;
+            opacity: 0.4;
+        }
+
+        .no-results h2 {
+            color: #2d3748;
+            margin-bottom: 10px;
+            font-size: 1.8em;
+        }
+
+        .no-results p {
+            font-size: 1.1em;
+            margin-bottom: 20px;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 25px 20px;
+            }
+
+            .header h1 {
+                font-size: 1.8em;
+            }
+
+            .nav-links {
+                flex-direction: column;
+                gap: 8px;
+            }
+
+            .nav-links a {
+                width: 100%;
+                justify-content: center;
+            }
+
+            .history-table {
+                font-size: 0.85em;
+                display: block;
+                overflow-x: auto;
+            }
+
+            .history-table th,
+            .history-table td {
+                padding: 12px 8px;
+            }
+
+            .query-cell {
+                max-width: 150px;
+            }
+
+            .stat-box h3 {
+                font-size: 2em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📜 Search History</h1>
+            <p>View all your previous searches and results</p>
+        </div>
+
+        <div class="nav-links">
+            <a href="/">🏠 New Search</a>
+            <a href="/statistics">📊 Statistics</a>
+        </div>
+
+        <div class="search-stats">
+            <div class="stat-box">
+                <h3>{{ searches|length }}</h3>
+                <p>Total Searches</p>
+            </div>
+            <div class="stat-box">
+                <h3>{{ searches|selectattr('status', 'equalto', 'completed')|list|length }}</h3>
+                <p>Completed</p>
+            </div>
+            <div class="stat-box">
+                <h3>{{ searches|selectattr('status', 'equalto', 'failed')|list|length }}</h3>
+                <p>Failed</p>
+            </div>
+        </div>
+
+        {% if searches %}
+        <table class="history-table">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Query</th>
+                    <th>Timestamp</th>
+                    <th>Results</th>
+                    <th>Duration</th>
+                    <th>Status</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for search in searches %}
+                <tr>
+                    <td>#{{ search.search_id }}</td>
+                    <td class="query-cell" title="{{ search.query }}"><strong>{{ search.query }}</strong></td>
+                    <td>{{ search.search_timestamp }}</td>
+                    <td>{{ search.total_results }}</td>
+                    <td>
+                        {% if search.search_duration_ms %}
+                            {{ (search.search_duration_ms / 1000)|round(2) }}s
+                        {% else %}
+                            -
+                        {% endif %}
+                    </td>
+                    <td>
+                        <span class="status-badge status-{{ search.status }}">
+                            {{ search.status }}
+                        </span>
+                    </td>
+                    <td>
+                        <a href="/search/{{ search.search_id }}" class="view-link">View Details →</a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <div class="no-results">
+            <div class="no-results-icon">🔍</div>
+            <h2>No Search History</h2>
+            <p>You haven't performed any searches yet.</p>
+            <a href="/" class="view-link" style="font-size: 1.2em;">Start Your First Search →</a>
+        </div>
+        {% endif %}
+    </div>
+</body>
+</html>

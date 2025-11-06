@@ -5,7 +5,7 @@ Displays price comparison results in a web table with highlighting and paginatio
 
 import streamlit as st
 import pandas as pd
-from results_display import find_cheapest_item, paginate_results
+from utils.results_display import find_cheapest_item, paginate_results
 
 # Sample data for demonstration
 SAMPLE_RESULTS = [

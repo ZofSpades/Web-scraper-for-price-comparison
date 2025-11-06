@@ -4,9 +4,9 @@ Displays price comparison results in a web table with highlighting and paginatio
 """
 
 from flask import Flask, render_template, request, jsonify
-from results_display import find_cheapest_item, paginate_results
+from utils.results_display import find_cheapest_item, paginate_results
 
-app = Flask(__name__)
+app = Flask(__name__, template_folder='../templates')
 
 # Sample data for demonstration (in real app, this would come from scraping)
 SAMPLE_RESULTS = [

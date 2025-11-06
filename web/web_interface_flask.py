@@ -4,9 +4,9 @@ Provides a minimal web interface with a search bar for product name or URL input
 """
 
 from flask import Flask, render_template, request, jsonify
-from input_handler import validate_input
+from utils.input_handler import validate_input
 
-app = Flask(__name__)
+app = Flask(__name__, template_folder='../templates')
 
 
 @app.route('/')

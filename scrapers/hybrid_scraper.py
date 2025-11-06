@@ -3,8 +3,8 @@ Hybrid Scraper Base Class
 Extends BaseScraper to support both static and Selenium-based scraping.
 """
 
-from base_scraper import BaseScraper
-from selenium_config import SeleniumConfig
+from scrapers.base_scraper import BaseScraper
+from scrapers.selenium_config import SeleniumConfig
 from typing import Dict, Optional
 import requests
 from abc import abstractmethod
