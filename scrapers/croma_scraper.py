@@ -125,7 +125,7 @@ class CromaScraper(HybridScraper):
                 return title_tag.get_text(strip=True)
             
             return "Title not available"
-        except:
+        except Exception:
             return "Title not available"
     
     def _extract_price(self, soup: BeautifulSoup) -> str:
@@ -147,7 +147,7 @@ class CromaScraper(HybridScraper):
                 return f"₹{price_tag.get_text(strip=True)}"
             
             return "Price not available"
-        except:
+        except Exception:
             return "Price not available"
     
     def _extract_rating(self, soup: BeautifulSoup) -> str:
@@ -163,7 +163,7 @@ class CromaScraper(HybridScraper):
                 return rating_tag.get_text(strip=True)
             
             return "N/A"
-        except:
+        except Exception:
             return "N/A"
     
     def _extract_availability(self, soup: BeautifulSoup) -> str:
@@ -189,7 +189,7 @@ class CromaScraper(HybridScraper):
                 return "In Stock"
             
             return "In Stock"
-        except:
+        except Exception:
             return "In Stock"
     
     def _scrape_with_selenium(self, input_data: str) -> Dict:
