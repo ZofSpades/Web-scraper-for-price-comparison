@@ -1,16 +1,18 @@
 """
-Real-time scraping integration
+Real-time scraping integration with asynchronous support
 Coordinates scraping across multiple e-commerce sites with advanced pricing utilities
+Uses async scraping for improved performance (target: ≤10-15s for 5 websites)
 """
 
 from scrapers.scraper_registry import ScraperRegistry
-from scrapers.scraper_controller import ScraperController
+from scrapers.async_scraper_controller import AsyncScraperController  # Use async controller
 from scrapers.amazon_scraper import AmazonScraper
 from scrapers.flipkart_scraper import FlipkartScraper
 from scrapers.snapdeal_scraper import SnapdealScraper
 from scrapers.myntra_scraper import MyntraScraper
 from scrapers.croma_scraper import CromaScraper
 from typing import List, Dict
+import time
 
 # Import pricing utilities for advanced price parsing and comparison
 from pricing.currency import CurrencyConverter
@@ -23,15 +25,17 @@ from decimal import Decimal
 class ScraperManager:
     """
     Manages real-time scraping from multiple e-commerce sites
+    Uses asynchronous scraping for improved performance
     """
     
     def __init__(self):
         """Initialize scraper registry and register all scrapers"""
         self.registry = ScraperRegistry()
-        self.controller = ScraperController(self.registry)
+        self.controller = AsyncScraperController(self.registry)  # Use async controller
         
-        # Set higher timeout for scraping operations (30 seconds per site)
-        self.controller.set_timeout(30)
+        # Set optimized timeouts for async scraping (target: ≤15s total)
+        self.controller.set_timeout(12)  # 12 seconds per site
+        self.controller.set_total_timeout(15)  # 15 seconds total for all sites
         self.controller.set_max_retries(2)
         
         # Register scrapers
@@ -46,7 +50,7 @@ class ScraperManager:
     
     def search_product(self, query: str, sites: List[str] = None) -> List[Dict]:
         """
-        Search for product across multiple sites
+        Search for product across multiple sites using async scraping
         
         Args:
             query: Product name or search query
@@ -57,34 +61,24 @@ class ScraperManager:
         """
         print(f"[SCRAPER_MANAGER] search_product called with query='{query}', sites={sites}")
         
+        start_time = time.time()
+        
         if sites is None or 'all' in sites or len(sites) == 0:
-            # Search all registered sites
+            # Search all registered sites using async controller
             print(f"[SCRAPER_MANAGER] Searching ALL registered sites: {self.registry.get_registered_sites()}")
             results = self.controller.scrape_all(query)
-            print(f"[SCRAPER_MANAGER] Raw results from scrape_all: {len(results)} results")
+            print(f"[SCRAPER_MANAGER] Raw results from async scrape_all: {len(results)} results")
         else:
-            # Search specific sites
+            # Search specific sites using async controller
             print(f"[SCRAPER_MANAGER] Searching specific sites: {sites}")
-            results = []
-            for site in sites:
-                scraper = self.registry.get_scraper(site.lower())
-                if scraper:
-                    try:
-                        result = scraper.scrape(query)
-                        results.append(result)
-                    except Exception as e:
-                        results.append({
-                            'site': site,
-                            'title': 'Error',
-                            'price': 'N/A',
-                            'rating': 'N/A',
-                            'availability': 'Error',
-                            'link': '#',
-                            'error': str(e)
-                        })
+            results = self.controller.scrape_all(query, specific_sites=sites)
+        
+        elapsed_time = time.time() - start_time
+        print(f"[SCRAPER_MANAGER] Total scraping time: {elapsed_time:.2f}s")
         
         formatted = self._format_results(results)
         print(f"[SCRAPER_MANAGER] Formatted results: {len(formatted)} results")
+        
         return formatted
     
     def _format_results(self, results: List[Dict]) -> List[Dict]:
