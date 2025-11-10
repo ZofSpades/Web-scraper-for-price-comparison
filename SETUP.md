@@ -204,7 +204,7 @@ PESU_EC_CSE_K_P60_Web_Scraper_for_Price_Comparison_Team-5/
 │
 ├── database/                        # Database layer
 │   ├── database.py                 # SQLite database manager
-│   ├── schema.sql                  # Database schema
+│   ├── schema_sqlite.sql           # SQLite database schema
 │   └── __init__.py
 │
 ├── pricing/                         # Advanced pricing utilities
@@ -217,7 +217,7 @@ PESU_EC_CSE_K_P60_Web_Scraper_for_Price_Comparison_Team-5/
 │
 ├── utils/                           # Utility modules
 │   ├── export_utils.py             # CSV/PDF export
-│   ├── input_validator.py          # Input validation
+│   ├── input_handler.py            # Input validation
 │   └── __init__.py
 │
 └── templates/                       # HTML templates
