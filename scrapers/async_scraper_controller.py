@@ -129,7 +129,10 @@ class AsyncScraperController:
         if specific_sites:
             scrapers = []
             for site_name in specific_sites:
-                scraper = self.registry.get_scraper(site_name)
+                # Normalize site name to capitalize first letter (e.g., "amazon" -> "Amazon")
+                # to maintain backward compatibility with case-insensitive lookups
+                normalized_name = site_name.lower().capitalize()
+                scraper = self.registry.get_scraper(normalized_name)
                 if scraper:
                     scrapers.append(scraper)
         else:
@@ -211,13 +214,16 @@ class AsyncScraperController:
         Scrape from a single specific site asynchronously.
         
         Args:
-            site_name (str): Name of the site to scrape
+            site_name (str): Name of the site to scrape (case-insensitive)
             input_data (str): Product name or URL
             
         Returns:
             Optional[Dict]: Scraping result or None if scraper not found
         """
-        scraper = self.registry.get_scraper(site_name)
+        # Normalize site name to capitalize first letter (e.g., "amazon" -> "Amazon")
+        # to maintain backward compatibility with case-insensitive lookups
+        normalized_name = site_name.lower().capitalize()
+        scraper = self.registry.get_scraper(normalized_name)
         
         if not scraper:
             return None
