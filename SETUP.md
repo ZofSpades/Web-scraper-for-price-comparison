@@ -160,6 +160,11 @@ PESU_EC_CSE_K_P60_Web_Scraper_for_Price_Comparison_Team-5/
 ├── SETUP.md                         # This documentation file
 ├── .gitignore                       # Git ignore rules
 │
+├── .github/                         # GitHub configuration
+│   └── workflows/                   # GitHub Actions workflows
+│       ├── test.yml                 # Comprehensive test suite (multi-version)
+│       └── ci.yml                   # Quick CI check (all branches)
+│
 ├── test_*.py                        # Test suite (pytest)
 ├── test_regression_suite.py         # Test runner for CI/CD
 │
@@ -363,12 +368,73 @@ python test_regression_suite.py
 
 ### GitHub CI/CD Integration
 
-The test suite is designed for automated testing in GitHub Actions:
+The test suite is fully integrated with GitHub Actions for automated testing.
+
+#### Workflow Files
+
+Located in `.github/workflows/`:
+
+1. **`test.yml`** - Comprehensive Test Suite
+   - Runs on: push/PR to main, develop, feature/async-docs-cleanup
+   - Tests on: Python 3.8, 3.9, 3.10, 3.11
+   - Includes: Coverage reports, codecov integration
+   - Duration: ~2-3 minutes
+
+2. **`ci.yml`** - Quick CI Check
+   - Runs on: push to main, develop, feature/async-docs-cleanup
+   - Tests on: Python 3.11
+   - Fast regression suite (fail-fast mode)
+   - Duration: ~30-60 seconds
+
+#### Branch Strategy
+
+**Development Workflow:**
+```
+feature/async-docs-cleanup → develop → main
+```
+
+1. **feature/async-docs-cleanup** - Active development branch
+   - Complete all changes here
+   - CI/CD runs on every push
+   - Merge to develop when ready
+
+2. **develop** - Integration branch
+   - Receives merges from feature branches
+   - CI/CD validates integration
+   - Merge to main for teacher review
+
+3. **main** - Production/Review branch
+   - Teacher reviews and approves
+   - Final merge happens here
+   - Protected by CI/CD checks
+
+#### How It Works
+
+**On every push/pull request:**
+1. GitHub Actions automatically triggers
+2. Sets up Python environment
+3. Installs dependencies (with caching)
+4. Runs regression suite: `python test_regression_suite.py`
+5. Runs full test suite: `pytest -v --cov`
+6. Uploads coverage reports (Python 3.11 only)
+7. Reports pass/fail status on commit
+
+**Viewing Results:**
+- Go to repository → "Actions" tab
+- Click on any workflow run to see details
+- Green ✓ = All tests passed
+- Red ✗ = Tests failed (click for details)
+
+**Manual Trigger:**
+- Go to "Actions" tab → "Run Test Suite"
+- Click "Run workflow" button
+- Select branch and run
 
 **Key Features:**
 - Fast execution for CI/CD pipelines
 - Isolated unit tests (no external dependencies)
-- Regression suite for quick validation
+- Pip package caching for faster builds
+- Matrix testing across Python versions
 - Exit codes for CI/CD pass/fail status
 
 **Regression Suite:**
