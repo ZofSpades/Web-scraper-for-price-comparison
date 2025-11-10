@@ -9,6 +9,7 @@
 - [Project Structure](#project-structure)
 - [Features](#features)
 - [Supported E-commerce Sites](#supported-e-commerce-sites)
+- [Testing](#testing)
 - [Troubleshooting](#troubleshooting)
 
 ---
@@ -159,6 +160,9 @@ PESU_EC_CSE_K_P60_Web_Scraper_for_Price_Comparison_Team-5/
 ├── SETUP.md                         # This documentation file
 ├── .gitignore                       # Git ignore rules
 │
+├── test_*.py                        # Test suite (pytest)
+├── test_regression_suite.py         # Test runner for CI/CD
+│
 ├── web/                             # Flask web application
 │   ├── app.py                       # Main Flask routes and logic
 │   └── __init__.py
@@ -269,6 +273,130 @@ The application currently scrapes the following Indian e-commerce websites:
    - May encounter bot detection
 
 **Note:** Some sites may block automated requests. The application handles errors gracefully and shows results from available sites.
+
+---
+
+## 🧪 Testing
+
+### Test Suite Overview
+
+The project includes a comprehensive test suite for GitHub CI/CD integration, covering all critical functionality areas.
+
+### Running Tests
+
+**Install pytest (if not already installed):**
+```bash
+pip install pytest
+```
+
+**Run all tests:**
+```bash
+pytest
+```
+
+**Run specific test:**
+```bash
+pytest test_TC_CMP_01.py
+```
+
+**Run with verbose output:**
+```bash
+pytest -v
+```
+
+**Run regression suite (CI/CD):**
+```bash
+python test_regression_suite.py
+```
+
+### Test Cases
+
+#### 1. **TC_CMP_01** - Price Comparison Ranking
+- **File:** `test_TC_CMP_01.py`
+- **Purpose:** Validates that `rank_offers()` correctly sorts products by price
+- **Coverage:** Pricing comparison logic
+
+#### 2. **TC_ERR_01** - Error Handling
+- **File:** `test_TC_ERR_01.py`
+- **Purpose:** Tests error handling for invalid scraper responses
+- **Coverage:** Error management
+
+#### 3. **TC_EXP_01** - Export Functionality
+- **File:** `test_TC_EXP_01.py`
+- **Purpose:** Validates CSV export functionality
+- **Coverage:** Data export utilities
+
+#### 4. **TC_INP_01** - Valid Input Validation
+- **File:** `test_TC_INP_01.py`
+- **Purpose:** Tests input validation for product names
+- **Coverage:** Input validation (valid cases)
+
+#### 5. **TC_INP_02** - Invalid Input Validation
+- **File:** `test_TC_INP_02.py`
+- **Purpose:** Tests rejection of invalid/empty inputs
+- **Coverage:** Input validation (edge cases)
+
+#### 6. **TC_NRM_01** - Price Normalization
+- **File:** `test_TC_NRM_01.py`
+- **Purpose:** Validates price parsing and normalization
+- **Coverage:** Price parsing utilities
+
+#### 7. **TC_PERF_01** - Performance Testing
+- **File:** `test_TC_PERF_01.py`
+- **Purpose:** Ensures scraping completes within performance threshold (<5s for single scraper)
+- **Coverage:** Performance benchmarks
+
+#### 8. **TC_SCR_01** - Scraper Manager
+- **File:** `test_TC_SCR_01.py`
+- **Purpose:** Tests scraper manager orchestration
+- **Coverage:** ScraperManager integration
+
+#### 9. **TC_SCR_02** - Scraper Registry
+- **File:** `test_TC_SCR_02.py`
+- **Purpose:** Validates dynamic scraper registration/unregistration
+- **Coverage:** ScraperRegistry functionality
+
+#### 10. **TC_UI_01** - Flask Routes
+- **File:** `test_TC_UI_01.py`
+- **Purpose:** Tests Flask application routes and responses
+- **Coverage:** Web application endpoints
+
+### GitHub CI/CD Integration
+
+The test suite is designed for automated testing in GitHub Actions:
+
+**Key Features:**
+- Fast execution for CI/CD pipelines
+- Isolated unit tests (no external dependencies)
+- Regression suite for quick validation
+- Exit codes for CI/CD pass/fail status
+
+**Regression Suite:**
+- **File:** `test_regression_suite.py`
+- **Usage:** `python test_regression_suite.py`
+- **Behavior:** Runs all tests, fails fast on first error
+- **Exit Code:** 0 (pass) or non-zero (fail)
+
+### Test Coverage Areas
+
+| Area | Test Cases | Coverage |
+|------|-----------|----------|
+| Price Comparison | TC_CMP_01 | Ranking logic |
+| Error Handling | TC_ERR_01 | Exception management |
+| Data Export | TC_EXP_01 | CSV generation |
+| Input Validation | TC_INP_01, TC_INP_02 | Input sanitization |
+| Price Parsing | TC_NRM_01 | Normalization |
+| Performance | TC_PERF_01 | Speed benchmarks |
+| Scraping | TC_SCR_01, TC_SCR_02 | Core functionality |
+| Web Interface | TC_UI_01 | Flask routes |
+
+### Best Practices
+
+- Tests use **mock scrapers** (no actual web requests)
+- Fast execution (< 5 seconds total)
+- Isolated from external dependencies
+- Deterministic results for CI/CD
+- Clear assertions for debugging
 
 ---
 
