@@ -86,6 +86,8 @@ pip install -r requirements.txt
 - requests (HTTP requests)
 - pandas (data processing)
 - reportlab (PDF generation)
+- aiohttp (async HTTP client for concurrent scraping)
+- nest-asyncio (async compatibility with Flask)
 
 ---
 
@@ -165,7 +167,8 @@ PESU_EC_CSE_K_P60_Web_Scraper_for_Price_Comparison_Team-5/
 │
 ├── scrapers/                        # Scraping modules
 │   ├── scraper_manager.py          # Orchestrates all scrapers
-│   ├── scraper_controller.py       # Handles concurrent scraping
+│   ├── async_scraper_controller.py # Async concurrent scraping controller
+│   ├── scraper_controller.py       # Legacy scraper controller
 │   ├── scraper_registry.py         # Dynamic scraper registration
 │   ├── base_scraper.py             # Abstract base class
 │   ├── hybrid_scraper.py           # Static + Selenium hybrid
@@ -209,9 +212,12 @@ PESU_EC_CSE_K_P60_Web_Scraper_for_Price_Comparison_Team-5/
 
 ### 1. **Real-time Price Comparison**
 - Search for any product by name
-- Automatically scrapes 5 e-commerce sites in parallel
+- **Asynchronous concurrent scraping** - all 5 sites scraped in parallel
+- **Fast response time** - typically 8-12 seconds (vs 30+ seconds with sequential scraping)
+- **Optimized timeouts** - 12 seconds per scraper, 15 seconds total
 - Results sorted by best price
 - Shows product details: title, price, rating, availability
+- **Graceful degradation** - returns partial results if some scrapers fail
 
 ### 2. **Search History**
 - All searches automatically saved to database
@@ -303,8 +309,9 @@ pip install -r requirements.txt
 **Solution:** This is normal behavior
 - Some sites have bot detection
 - Amazon and Flipkart are most reliable
-- Timeout is set to 30 seconds per site
+- Timeout is set to 12 seconds per site (15 seconds total with async scraping)
 - Results from available sites will be shown
+- **Async scraping** runs all sites concurrently for faster results
 
 #### 7. **Selenium/ChromeDriver errors**
 **Solution:** 
