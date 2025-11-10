@@ -1,4 +1,4 @@
-from . import parser, currency, normalize, compare, types
+from . import compare, currency, normalize, parser, types
 
 __all__ = [
     "parser",
