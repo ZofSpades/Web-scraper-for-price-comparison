@@ -58,13 +58,12 @@ class AsyncScraperController:
         Returns:
             Dict: Scraping result or error result
         """
-        site_name = scraper.get_site_name()
         last_error = None
         
         for attempt in range(self.max_retries):
             try:
                 # Run the synchronous scrape method in an executor
-                loop = asyncio.get_event_loop()
+                loop = asyncio.get_running_loop()
                 result = await loop.run_in_executor(None, scraper.scrape, input_data)
                 
                 # Validate the output
