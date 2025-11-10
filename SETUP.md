@@ -213,7 +213,7 @@ PESU_EC_CSE_K_P60_Web_Scraper_for_Price_Comparison_Team-5/
 ### 1. **Real-time Price Comparison**
 - Search for any product by name
 - **Asynchronous concurrent scraping** - all 5 sites scraped in parallel
-- **Fast response time** - typically 8-12 seconds (vs 30+ seconds with sequential scraping)
+- **Fast response time** - typically under 15 seconds (vs 30+ seconds with sequential scraping)
 - **Optimized timeouts** - 12 seconds per scraper, 15 seconds total
 - Results sorted by best price
 - Shows product details: title, price, rating, availability
