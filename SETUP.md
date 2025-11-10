@@ -165,8 +165,19 @@ PESU_EC_CSE_K_P60_Web_Scraper_for_Price_Comparison_Team-5/
 │       ├── test.yml                 # Comprehensive test suite (multi-version)
 │       └── ci.yml                   # Quick CI check (all branches)
 │
-├── test_*.py                        # Test suite (pytest)
-├── test_regression_suite.py         # Test runner for CI/CD
+├── tests/                           # Test suite directory
+│   ├── __init__.py                  # Test package initialization
+│   ├── test_regression_suite.py    # Test runner for CI/CD
+│   ├── test_TC_CMP_01.py           # Price comparison tests
+│   ├── test_TC_ERR_01.py           # Error handling tests
+│   ├── test_TC_EXP_01.py           # Export functionality tests
+│   ├── test_TC_INP_01.py           # Valid input validation tests
+│   ├── test_TC_INP_02.py           # Invalid input validation tests
+│   ├── test_TC_NRM_01.py           # Price normalization tests
+│   ├── test_TC_PERF_01.py          # Performance tests
+│   ├── test_TC_SCR_01.py           # Scraper manager tests
+│   ├── test_TC_SCR_02.py           # Scraper registry tests
+│   └── test_TC_UI_01.py            # Flask UI tests
 │
 ├── web/                             # Flask web application
 │   ├── app.py                       # Main Flask routes and logic
@@ -296,73 +307,73 @@ pip install pytest
 
 **Run all tests:**
 ```bash
-pytest
+pytest tests/
 ```
 
 **Run specific test:**
 ```bash
-pytest test_TC_CMP_01.py
+pytest tests/test_TC_CMP_01.py
 ```
 
 **Run with verbose output:**
 ```bash
-pytest -v
+pytest tests/ -v
 ```
 
 **Run regression suite (CI/CD):**
 ```bash
-python test_regression_suite.py
+python tests/test_regression_suite.py
 ```
 
 ### Test Cases
 
 #### 1. **TC_CMP_01** - Price Comparison Ranking
-- **File:** `test_TC_CMP_01.py`
+- **File:** `tests/test_TC_CMP_01.py`
 - **Purpose:** Validates that `rank_offers()` correctly sorts products by price
 - **Coverage:** Pricing comparison logic
 
 #### 2. **TC_ERR_01** - Error Handling
-- **File:** `test_TC_ERR_01.py`
+- **File:** `tests/test_TC_ERR_01.py`
 - **Purpose:** Tests error handling for invalid scraper responses
 - **Coverage:** Error management
 
 #### 3. **TC_EXP_01** - Export Functionality
-- **File:** `test_TC_EXP_01.py`
+- **File:** `tests/test_TC_EXP_01.py`
 - **Purpose:** Validates CSV export functionality
 - **Coverage:** Data export utilities
 
 #### 4. **TC_INP_01** - Valid Input Validation
-- **File:** `test_TC_INP_01.py`
+- **File:** `tests/test_TC_INP_01.py`
 - **Purpose:** Tests input validation for product names
 - **Coverage:** Input validation (valid cases)
 
 #### 5. **TC_INP_02** - Invalid Input Validation
-- **File:** `test_TC_INP_02.py`
+- **File:** `tests/test_TC_INP_02.py`
 - **Purpose:** Tests rejection of invalid/empty inputs
 - **Coverage:** Input validation (edge cases)
 
 #### 6. **TC_NRM_01** - Price Normalization
-- **File:** `test_TC_NRM_01.py`
+- **File:** `tests/test_TC_NRM_01.py`
 - **Purpose:** Validates price parsing and normalization
 - **Coverage:** Price parsing utilities
 
 #### 7. **TC_PERF_01** - Performance Testing
-- **File:** `test_TC_PERF_01.py`
+- **File:** `tests/test_TC_PERF_01.py`
 - **Purpose:** Ensures scraping completes within performance threshold (<5s for single scraper)
 - **Coverage:** Performance benchmarks
 
 #### 8. **TC_SCR_01** - Scraper Manager
-- **File:** `test_TC_SCR_01.py`
+- **File:** `tests/test_TC_SCR_01.py`
 - **Purpose:** Tests scraper manager orchestration
 - **Coverage:** ScraperManager integration
 
 #### 9. **TC_SCR_02** - Scraper Registry
-- **File:** `test_TC_SCR_02.py`
+- **File:** `tests/test_TC_SCR_02.py`
 - **Purpose:** Validates dynamic scraper registration/unregistration
 - **Coverage:** ScraperRegistry functionality
 
 #### 10. **TC_UI_01** - Flask Routes
-- **File:** `test_TC_UI_01.py`
+- **File:** `tests/test_TC_UI_01.py`
 - **Purpose:** Tests Flask application routes and responses
 - **Coverage:** Web application endpoints
 
@@ -438,8 +449,8 @@ feature/async-docs-cleanup → develop → main
 - Exit codes for CI/CD pass/fail status
 
 **Regression Suite:**
-- **File:** `test_regression_suite.py`
-- **Usage:** `python test_regression_suite.py`
+- **File:** `tests/test_regression_suite.py`
+- **Usage:** `python tests/test_regression_suite.py`
 - **Behavior:** Runs all tests, fails fast on first error
 - **Exit Code:** 0 (pass) or non-zero (fail)
 

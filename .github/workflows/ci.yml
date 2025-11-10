@@ -35,7 +35,7 @@ jobs:
     
     - name: Run regression suite (fail fast)
       run: |
-        python test_regression_suite.py
+        python tests/test_regression_suite.py
     
     - name: Display test summary
       if: always()

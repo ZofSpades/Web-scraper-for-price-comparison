@@ -40,11 +40,11 @@ jobs:
     
     - name: Run regression test suite
       run: |
-        python test_regression_suite.py
+        python tests/test_regression_suite.py
     
     - name: Run all tests with coverage
       run: |
-        pytest -v --cov=. --cov-report=term-missing --cov-report=xml
+        pytest tests/ -v --cov=. --cov-report=term-missing --cov-report=xml
     
     - name: Upload coverage reports
       if: matrix.python-version == '3.11'
