@@ -86,7 +86,6 @@ pip install -r requirements.txt
 - requests (HTTP requests)
 - pandas (data processing)
 - reportlab (PDF generation)
-- aiohttp (async HTTP client for concurrent scraping)
 
 ---
 
