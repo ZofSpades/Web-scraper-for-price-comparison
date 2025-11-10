@@ -34,8 +34,12 @@ class ScraperManager:
         self.controller = AsyncScraperController(self.registry)  # Use async controller
         
         # Set optimized timeouts for async scraping (target: ≤15s total)
-        self.controller.set_timeout(12)  # 12 seconds per site
-        self.controller.set_total_timeout(15)  # 15 seconds total for all sites
+        # Per-site timeout: 10s - Maximum time allowed for a single scraper
+        # Total timeout: 15s - Overall deadline for all concurrent scrapers
+        # Buffer: 5s - Allows for asyncio overhead, initialization, and result processing
+        # Since scrapers run concurrently, total time ≈ max(individual_times) + overhead
+        self.controller.set_timeout(10)  # 10 seconds per site
+        self.controller.set_total_timeout(15)  # 15 seconds total for all sites (5s buffer)
         self.controller.set_max_retries(2)
         
         # Register scrapers

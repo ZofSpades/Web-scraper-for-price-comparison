@@ -214,7 +214,7 @@ PESU_EC_CSE_K_P60_Web_Scraper_for_Price_Comparison_Team-5/
 - Search for any product by name
 - **Asynchronous concurrent scraping** - all 5 sites scraped in parallel
 - **Fast response time** - typically under 15 seconds (vs 30+ seconds with sequential scraping)
-- **Optimized timeouts** - 12 seconds per scraper, 15 seconds total
+- **Optimized timeouts** - 10 seconds per scraper, 15 seconds total (5s buffer for overhead)
 - Results sorted by best price
 - Shows product details: title, price, rating, availability
 - **Graceful degradation** - returns partial results if some scrapers fail
@@ -309,7 +309,7 @@ pip install -r requirements.txt
 **Solution:** This is normal behavior
 - Some sites have bot detection
 - Amazon and Flipkart are most reliable
-- Timeout is set to 12 seconds per site (15 seconds total with async scraping)
+- Timeout is set to 10 seconds per site (15 seconds total with 5s overhead buffer)
 - Results from available sites will be shown
 - **Async scraping** runs all sites concurrently for faster results
 
