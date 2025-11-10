@@ -145,45 +145,56 @@ class AsyncScraperController:
         
         # Create tasks for all scrapers
         tasks = [
-            self._scrape_with_timeout_async(scraper, input_data)
+            asyncio.create_task(self._scrape_with_timeout_async(scraper, input_data))
             for scraper in scrapers
         ]
         
         # Execute all tasks concurrently with overall timeout
-        try:
-            results = await asyncio.wait_for(
-                asyncio.gather(*tasks, return_exceptions=True),
-                timeout=self.total_timeout
-            )
-            
-            # Process results and handle exceptions
-            processed_results = []
-            for i, result in enumerate(results):
+        # Use asyncio.wait() instead of wait_for() to preserve partial results
+        done, pending = await asyncio.wait(tasks, timeout=self.total_timeout)
+        
+        elapsed_time = time.time() - start_time
+        
+        # Process completed tasks
+        processed_results = []
+        completed_count = 0
+        
+        for task in done:
+            try:
+                result = task.result()
                 if isinstance(result, Exception):
                     # Task raised an exception
-                    scraper = scrapers[i]
+                    scraper_index = tasks.index(task)
+                    scraper = scrapers[scraper_index]
                     processed_results.append(
                         scraper.create_error_result(f"Exception: {str(result)}")
                     )
                 else:
                     processed_results.append(result)
-            
-            elapsed_time = time.time() - start_time
-            print(f"[ASYNC CONTROLLER] Completed scraping {len(scrapers)} sites in {elapsed_time:.2f}s")
-            
-            return processed_results
-            
-        except asyncio.TimeoutError:
-            elapsed_time = time.time() - start_time
-            print(f"[ASYNC CONTROLLER] Overall timeout after {elapsed_time:.2f}s")
-            
-            # Return whatever results we have
-            results = []
-            for scraper in scrapers:
-                results.append(
-                    scraper.create_error_result(f"Overall timeout after {self.total_timeout}s")
+                    completed_count += 1
+            except Exception as e:
+                # Task exception not caught properly
+                scraper_index = tasks.index(task)
+                scraper = scrapers[scraper_index]
+                processed_results.append(
+                    scraper.create_error_result(f"Task exception: {str(e)}")
                 )
-            return results
+        
+        # Handle pending (timed out) tasks
+        if pending:
+            print(f"[ASYNC CONTROLLER] {len(pending)} scrapers timed out, cancelling...")
+            for task in pending:
+                task.cancel()
+                # Find which scraper this task belongs to
+                scraper_index = tasks.index(task)
+                scraper = scrapers[scraper_index]
+                processed_results.append(
+                    scraper.create_error_result(f"Timeout after {self.total_timeout}s")
+                )
+        
+        print(f"[ASYNC CONTROLLER] Completed {completed_count}/{len(scrapers)} scrapers in {elapsed_time:.2f}s")
+        
+        return processed_results
     
     def scrape_all(self, input_data: str,
                    specific_sites: Optional[List[str]] = None) -> List[Dict]:
