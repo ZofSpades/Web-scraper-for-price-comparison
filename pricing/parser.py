@@ -20,11 +20,10 @@ from __future__ import annotations
 
 import re
 from dataclasses import replace
-from decimal import Decimal, InvalidOperation, ROUND_HALF_EVEN
+from decimal import ROUND_HALF_EVEN, Decimal, InvalidOperation
 from typing import Optional, Tuple
 
 from .types import ParsedMonetary, RawPrice
-
 
 # Mapping of currency indicators (symbols, codes, common prefixes) to ISO codes
 _CURRENCY_MAP = {
@@ -173,7 +172,7 @@ def normalize_numeric_string(text: str) -> Optional[Decimal]:
         work = work.replace(dec_sep, ".")
     # If no explicit decimal sep but there's a dot or comma left from ambiguous case, strip others
     work = re.sub(r"[^0-9.\-]", "", work)
-    
+
     # Validate: ensure hyphen is only at the start (for negative numbers)
     if "-" in work:
         # Extract all hyphens
@@ -185,16 +184,16 @@ def normalize_numeric_string(text: str) -> Optional[Decimal]:
         else:
             # Hyphen not at start, remove all hyphens
             work = work.replace("-", "")
-    
+
     # If multiple dots remain (malformed), keep last as decimal
     if work.count(".") > 1:
         last_dot = work.rfind(".")
         work = work[:last_dot].replace(".", "") + work[last_dot:]
-    
+
     # Final validation: ensure the pattern is valid (optional minus, digits, optional decimal point with digits)
     if not re.fullmatch(r"-?\d+(\.\d+)?", work):
         return None
-    
+
     try:
         return Decimal(work)
     except (InvalidOperation, ValueError):

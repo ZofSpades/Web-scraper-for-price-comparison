@@ -11,19 +11,19 @@ from urllib.parse import urlparse
 def is_valid_url(input_string):
     """
     Validates if the input string is a valid URL.
-    
+
     Args:
         input_string (str): The input string to validate
-        
+
     Returns:
         bool: True if the input is a valid URL, False otherwise
     """
     if not input_string or not isinstance(input_string, str):
         return False
-    
+
     # Remove leading/trailing whitespace
     input_string = input_string.strip()
-    
+
     # Basic URL pattern check
     url_pattern = re.compile(
         r'^https?://'  # http:// or https://
@@ -32,7 +32,7 @@ def is_valid_url(input_string):
         r'\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})'  # ...or ip
         r'(?::\d+)?'  # optional port
         r'(?:/?|[/?]\S+)$', re.IGNORECASE)
-    
+
     # Check if it matches the URL pattern
     if url_pattern.match(input_string):
         try:
@@ -40,17 +40,17 @@ def is_valid_url(input_string):
             return all([result.scheme, result.netloc])
         except ValueError:
             return False
-    
+
     return False
 
 
 def validate_input(input_string):
     """
     Validates and categorizes the input as either a URL or a product name.
-    
+
     Args:
         input_string (str): The input string to validate
-        
+
     Returns:
         dict: A dictionary containing:
             - 'type': 'url' or 'product_name'
@@ -63,10 +63,10 @@ def validate_input(input_string):
             'value': None,
             'valid': False
         }
-    
+
     # Remove leading/trailing whitespace
     input_string = input_string.strip()
-    
+
     # Check if input is empty after stripping
     if not input_string:
         return {
@@ -74,7 +74,7 @@ def validate_input(input_string):
             'value': None,
             'valid': False
         }
-    
+
     # Check if it's a valid URL
     if is_valid_url(input_string):
         return {
@@ -104,7 +104,7 @@ def cli_input_prompt():
     Command-line interface for user input.
     Prompts the user to enter either a product name or a URL.
     Performs validation and returns the input value only.
-    
+
     Returns:
         dict: A dictionary containing the validated input information:
             - 'type': 'url' or 'product_name'
@@ -119,10 +119,10 @@ def cli_input_prompt():
     print("  2. A product URL (e.g., 'https://example.com/product')")
     print("\nType 'quit' or 'exit' to close the program.")
     print("-" * 60)
-    
+
     while True:
         user_input = input("\nEnter product name or URL: ").strip()
-        
+
         # Check for exit commands
         if user_input.lower() in ['quit', 'exit']:
             print("\nExiting the program. Goodbye!")
@@ -131,12 +131,12 @@ def cli_input_prompt():
                 'value': None,
                 'valid': True
             }
-        
+
         # Validate the input
         result = validate_input(user_input)
-        
+
         if result['valid']:
-            print(f"\n✓ Valid input detected!")
+            print("\n✓ Valid input detected!")
             print(f"  Type: {result['type'].replace('_', ' ').title()}")
             print(f"  Value: {result['value']}")
             return result
@@ -148,13 +148,13 @@ def cli_input_prompt():
 def get_cli_input():
     """
     Simplified CLI input function that returns only the validated input value.
-    
+
     Returns:
         str or None: The validated input string, or None if invalid/exit
     """
     result = cli_input_prompt()
-    
+
     if result['valid'] and result['type'] != 'exit':
         return result['value']
-    
+
     return None
