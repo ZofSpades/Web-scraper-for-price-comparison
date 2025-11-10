@@ -1,7 +1,7 @@
 """
 Asynchronous Scraper Controller
 Orchestrates concurrent scraping across multiple sites using asyncio for improved performance.
-Target: ≤ 10-15 seconds for 5 websites
+Target: ≤15 seconds for 5 websites
 """
 
 import asyncio
