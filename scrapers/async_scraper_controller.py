@@ -189,6 +189,7 @@ class AsyncScraperController:
                    specific_sites: Optional[List[str]] = None) -> List[Dict]:
         """
         Synchronous wrapper for async scraping (for compatibility with existing code).
+        Callable from Flask (synchronous context).
         
         Args:
             input_data (str): Product name or URL to search/scrape
@@ -197,17 +198,9 @@ class AsyncScraperController:
         Returns:
             List[Dict]: Aggregated results from all scrapers
         """
-        # Check if there's already a running event loop
-        try:
-            loop = asyncio.get_running_loop()
-            # We're in an async context, can't use asyncio.run()
-            # Create a new task instead
-            import nest_asyncio
-            nest_asyncio.apply()
-            return asyncio.run(self.scrape_all_async(input_data, specific_sites))
-        except RuntimeError:
-            # No running loop, we can use asyncio.run()
-            return asyncio.run(self.scrape_all_async(input_data, specific_sites))
+        # Flask is synchronous, so no running event loop exists
+        # Simply use asyncio.run() to create a new event loop
+        return asyncio.run(self.scrape_all_async(input_data, specific_sites))
     
     async def scrape_single_async(self, site_name: str, input_data: str) -> Optional[Dict]:
         """
@@ -233,6 +226,7 @@ class AsyncScraperController:
     def scrape_single(self, site_name: str, input_data: str) -> Optional[Dict]:
         """
         Synchronous wrapper for single site scraping.
+        Callable from Flask (synchronous context).
         
         Args:
             site_name (str): Name of the site to scrape
@@ -241,13 +235,9 @@ class AsyncScraperController:
         Returns:
             Optional[Dict]: Scraping result or None if scraper not found
         """
-        try:
-            loop = asyncio.get_running_loop()
-            import nest_asyncio
-            nest_asyncio.apply()
-            return asyncio.run(self.scrape_single_async(site_name, input_data))
-        except RuntimeError:
-            return asyncio.run(self.scrape_single_async(site_name, input_data))
+        # Flask is synchronous, so no running event loop exists
+        # Simply use asyncio.run() to create a new event loop
+        return asyncio.run(self.scrape_single_async(site_name, input_data))
     
     def get_status(self) -> Dict:
         """

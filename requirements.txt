@@ -11,4 +11,3 @@ reportlab==4.0.7
 mysql-connector-python==8.2.0
 python-dateutil==2.8.2
 aiohttp==3.9.1
-nest-asyncio==1.5.8

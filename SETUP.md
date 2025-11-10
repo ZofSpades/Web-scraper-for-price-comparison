@@ -86,7 +86,7 @@ pip install -r requirements.txt
 - requests (HTTP requests)
 - pandas (data processing)
 - reportlab (PDF generation)
-- nest-asyncio (async compatibility with Flask)
+- aiohttp (async HTTP client for concurrent scraping)
 
 ---
 
