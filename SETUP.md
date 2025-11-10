@@ -159,11 +159,15 @@ PESU_EC_CSE_K_P60_Web_Scraper_for_Price_Comparison_Team-5/
 ├── requirements.txt                 # Python dependencies
 ├── SETUP.md                         # This documentation file
 ├── .gitignore                       # Git ignore rules
+├── .flake8                          # Flake8 linter configuration
+├── .pylintrc                        # Pylint configuration
+├── pyproject.toml                   # Black, isort, pytest config
 │
 ├── .github/                         # GitHub configuration
 │   └── workflows/                   # GitHub Actions workflows
 │       ├── test.yml                 # Comprehensive test suite (multi-version)
-│       └── ci.yml                   # Quick CI check (all branches)
+│       ├── ci.yml                   # Quick CI check (all branches)
+│       └── code-quality.yml         # Code quality & security checks
 │
 ├── tests/                           # Test suite directory
 │   ├── __init__.py                  # Test package initialization
@@ -388,14 +392,22 @@ Located in `.github/workflows/`:
 1. **`test.yml`** - Comprehensive Test Suite
    - Runs on: push/PR to main, develop, feature/async-docs-cleanup
    - Tests on: Python 3.8, 3.9, 3.10, 3.11
-   - Includes: Coverage reports, codecov integration
-   - Duration: ~2-3 minutes
+   - Includes: Code quality checks, coverage reports
+   - Checks: Black, isort, flake8, pylint, bandit
+   - Duration: ~3-4 minutes
 
 2. **`ci.yml`** - Quick CI Check
    - Runs on: push to main, develop, feature/async-docs-cleanup
    - Tests on: Python 3.11
    - Fast regression suite (fail-fast mode)
    - Duration: ~30-60 seconds
+
+3. **`code-quality.yml`** - Code Quality & Security
+   - Runs on: push/PR to main, develop, feature/async-docs-cleanup
+   - Tools: Black, isort, flake8, pylint, bandit, safety
+   - Generates security reports
+   - Non-blocking (continues on errors)
+   - Duration: ~2-3 minutes
 
 #### Branch Strategy
 
@@ -467,6 +479,51 @@ feature/async-docs-cleanup → develop → main
 | Scraping | TC_SCR_01, TC_SCR_02 | Core functionality |
 | Web Interface | TC_UI_01 | Flask routes |
 
+### Code Quality Tools
+
+The project uses industry-standard tools for code quality and security:
+
+#### Formatting & Style
+- **Black** - Automatic code formatting (PEP 8 compliant)
+- **isort** - Import statement sorting and organization
+- **flake8** - Style guide enforcement and linting
+- **pylint** - Comprehensive code analysis
+
+#### Security & Safety
+- **Bandit** - Security vulnerability scanning
+- **Safety** - Dependency vulnerability checking
+
+#### Running Locally
+
+**Install quality tools:**
+```bash
+pip install black isort flake8 pylint bandit safety
+```
+
+**Format code:**
+```bash
+black .
+isort .
+```
+
+**Check code quality:**
+```bash
+flake8 .
+pylint **/*.py
+```
+
+**Security scan:**
+```bash
+bandit -r . -ll
+safety check
+```
+
+#### Configuration Files
+
+- `.flake8` - Flake8 configuration
+- `.pylintrc` - Pylint settings
+- `pyproject.toml` - Black, isort, pytest configuration
+
 ### Best Practices
 
 - Tests use **mock scrapers** (no actual web requests)
@@ -474,6 +531,8 @@ feature/async-docs-cleanup → develop → main
 - Isolated from external dependencies
 - Deterministic results for CI/CD
 - Clear assertions for debugging
+- Code formatted with Black before commits
+- Security scanned with Bandit
 
 ---
 
