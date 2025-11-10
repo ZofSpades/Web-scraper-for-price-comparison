@@ -1,7 +1,7 @@
 """
 Real-time scraping integration with asynchronous support
 Coordinates scraping across multiple e-commerce sites with advanced pricing utilities
-Uses async scraping for improved performance (target: ≤10-15s for 5 websites)
+Uses async scraping for improved performance (target: ≤15s for 5 websites)
 """
 
 from scrapers.scraper_registry import ScraperRegistry
