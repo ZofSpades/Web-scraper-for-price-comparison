@@ -24,6 +24,7 @@ This is a real-time web scraping application that compares product prices across
 - CSV export functionality
 - Advanced pricing utilities with multi-currency support
 - Responsive modern UI design
+- **Proxy & User-Agent Rotation** to prevent IP bans (NEW!)
 
 ---
 
@@ -111,6 +112,32 @@ The application uses:
 - **Automatic ChromeDriver management** via `webdriver-manager`
 - **Auto-initialized database** with proper schema
 - **Default configuration** optimized for Indian e-commerce sites
+- **Automatic user-agent rotation** for anti-detection (no setup needed)
+
+### Optional: Proxy Configuration (Recommended for Production)
+
+To prevent IP bans and blocking, you can configure proxies:
+
+1. **Copy the example environment file:**
+   ```bash
+   cp .env.example .env
+   ```
+
+2. **Edit `.env` and add your proxy configuration:**
+   ```bash
+   # Single proxy
+   SCRAPER_PROXY=http://username:password@proxy.example.com:8080
+   
+   # Or multiple proxies (comma-separated)
+   SCRAPER_PROXIES=http://proxy1.com:8080,http://user:pass@proxy2.com:3128
+   ```
+
+3. **See detailed proxy setup guide:**
+   ```bash
+   cat PROXY_ROTATION_GUIDE.md
+   ```
+
+**Note:** User-agent rotation works automatically without any configuration. Proxies are optional but recommended for production use to avoid rate limiting and IP bans.
 
 ---
 
@@ -130,12 +157,25 @@ You should see output like:
 Web Scraper for Price Comparison
 ============================================================
 
+Initializing rotation system...
+⚠ No proxies configured - using direct connection
+  Set SCRAPER_PROXY or SCRAPER_PROXIES environment variable to use proxies
+✓ User-agent rotation: 20 agents available
+
 Starting web server...
 Access the application at: http://127.0.0.1:5000
 
 Press CTRL+C to stop the server
 
  * Running on http://127.0.0.1:5000
+```
+
+**With Proxies Configured:**
+```
+Initializing rotation system...
+✓ Configured 3 proxy/proxies
+✓ User-agent rotation: 20 agents available
+✓ Proxy rotation: 3/3 proxies available
 ```
 
 ### Access the Application
@@ -195,6 +235,8 @@ PESU_EC_CSE_K_P60_Web_Scraper_for_Price_Comparison_Team-5/
 │   ├── base_scraper.py             # Abstract base class
 │   ├── hybrid_scraper.py           # Static + Selenium hybrid
 │   ├── selenium_config.py          # Selenium configuration
+│   ├── rotation_manager.py         # Proxy & user-agent rotation (NEW!)
+│   ├── rotation_config_example.py  # Rotation configuration examples (NEW!)
 │   ├── amazon_scraper.py           # Amazon scraper
 │   ├── flipkart_scraper.py         # Flipkart scraper
 │   ├── snapdeal_scraper.py         # Snapdeal scraper

@@ -1,9 +1,11 @@
 """
 Selenium Configuration and Driver Manager
 Handles Selenium WebDriver setup with headless mode support.
+Supports proxy and user-agent rotation.
 """
 
 import logging
+from typing import Optional, Dict
 
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
@@ -17,6 +19,7 @@ class SeleniumConfig:
     """
     Configuration manager for Selenium WebDriver.
     Supports headless mode for CI/CD and automated environments.
+    Supports proxy and user-agent rotation.
     """
 
     def __init__(self, headless=True, window_size="1920,1080"):
@@ -36,9 +39,13 @@ class SeleniumConfig:
         logging.getLogger('selenium').setLevel(logging.WARNING)
         logging.getLogger('urllib3').setLevel(logging.WARNING)
 
-    def create_driver(self):
+    def create_driver(self, user_agent: Optional[str] = None, proxy: Optional[Dict[str, str]] = None):
         """
-        Create and configure a Chrome WebDriver instance.
+        Create and configure a Chrome WebDriver instance with rotation support.
+
+        Args:
+            user_agent (Optional[str]): Custom user agent to use
+            proxy (Optional[Dict[str, str]]): Proxy configuration
 
         Returns:
             webdriver.Chrome: Configured Chrome WebDriver
@@ -56,12 +63,21 @@ class SeleniumConfig:
         chrome_options.add_argument('--disable-dev-shm-usage')
         chrome_options.add_argument('--disable-blink-features=AutomationControlled')
 
-        # User agent (polite headers)
-        chrome_options.add_argument(
-            'user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) '
-            'AppleWebKit/537.36 (KHTML, like Gecko) '
-            'Chrome/119.0.0.0 Safari/537.36'
-        )
+        # User agent - use provided or default
+        if user_agent:
+            chrome_options.add_argument(f'user-agent={user_agent}')
+        else:
+            chrome_options.add_argument(
+                'user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) '
+                'AppleWebKit/537.36 (KHTML, like Gecko) '
+                'Chrome/119.0.0.0 Safari/537.36'
+            )
+
+        # Proxy configuration
+        if proxy:
+            proxy_url = proxy.get('http') or proxy.get('https')
+            if proxy_url:
+                chrome_options.add_argument(f'--proxy-server={proxy_url}')
 
         # Additional options for headless stability
         chrome_options.add_argument('--disable-extensions')

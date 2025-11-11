@@ -1,8 +1,10 @@
 """
 Hybrid Scraper Base Class
 Extends BaseScraper to support both static and Selenium-based scraping.
+Supports proxy and user-agent rotation for both modes.
 """
 
+import requests
 from abc import abstractmethod
 from typing import Dict
 
@@ -14,6 +16,7 @@ class HybridScraper(BaseScraper):
     """
     Hybrid scraper that can fallback to Selenium for JS-rendered content.
     Tries static scraping first, falls back to Selenium if needed.
+    Supports proxy and user-agent rotation.
     """
 
     def __init__(self, use_selenium=False):
@@ -27,6 +30,91 @@ class HybridScraper(BaseScraper):
         self.use_selenium = use_selenium
         self.selenium_config = SeleniumConfig(headless=True)
         self.static_failed = False
+
+    def make_request(self, url: str, **kwargs) -> requests.Response:
+        """
+        Make HTTP request with rotation support.
+        Automatically handles proxy rotation and retry on failure.
+        
+        Args:
+            url (str): URL to request
+            **kwargs: Additional arguments for requests.get
+            
+        Returns:
+            requests.Response: Response object
+            
+        Raises:
+            Exception: If all attempts fail
+        """
+        # Get headers with rotated user-agent
+        headers = kwargs.get('headers', self.get_headers())
+        kwargs['headers'] = headers
+        
+        # Get proxy
+        proxy = self.get_proxy()
+        self.current_proxy = proxy
+        
+        max_attempts = 3
+        last_error = None
+        
+        for attempt in range(max_attempts):
+            try:
+                # Make request with or without proxy
+                if proxy:
+                    kwargs['proxies'] = proxy
+                
+                response = requests.get(url, **kwargs)
+                response.raise_for_status()
+                
+                # Success - mark proxy as working
+                if proxy:
+                    self.mark_proxy_success(proxy)
+                
+                return response
+                
+            except Exception as e:
+                last_error = e
+                
+                # Mark proxy as failed
+                if proxy:
+                    self.mark_proxy_failure(proxy)
+                
+                # Try different proxy on retry
+                if attempt < max_attempts - 1:
+                    proxy = self.get_proxy()
+                    self.current_proxy = proxy
+                    # Also rotate user-agent
+                    kwargs['headers'] = self.get_headers()
+        
+        # All attempts failed
+        raise last_error
+
+    def create_selenium_driver(self):
+        """
+        Create Selenium driver with rotation support.
+        
+        Returns:
+            webdriver.Chrome: Configured driver with rotated user-agent and proxy
+        """
+        # Get rotated user-agent
+        headers = self.get_headers()
+        user_agent = headers.get('User-Agent')
+        
+        # Get proxy
+        proxy = self.get_proxy()
+        self.current_proxy = proxy
+        
+        try:
+            driver = self.selenium_config.create_driver(user_agent=user_agent, proxy=proxy)
+            # Mark proxy as successful if driver created
+            if proxy:
+                self.mark_proxy_success(proxy)
+            return driver
+        except Exception as e:
+            # Mark proxy as failed
+            if proxy:
+                self.mark_proxy_failure(proxy)
+            raise e
 
     def scrape(self, input_data: str) -> Dict:
         """
