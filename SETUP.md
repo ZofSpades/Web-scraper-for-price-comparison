@@ -141,7 +141,108 @@ To prevent IP bans and blocking, you can configure proxies:
 
 ---
 
-## 🚀 Running the Application
+## � Proxy & User-Agent Rotation
+
+### Overview
+
+The scraper includes advanced proxy and user-agent rotation to prevent IP bans and blocking:
+
+**Features:**
+- ✅ **Automatic User-Agent Rotation** - 20+ modern browser user agents
+- ✅ **Proxy Rotation** - Automatic failover and retry logic
+- ✅ **Failure Handling** - Failed proxies temporarily disabled (5 min cooldown)
+- ✅ **Success Tracking** - Monitor proxy performance
+- ✅ **Seamless Integration** - Works with all scrapers automatically
+
+### Quick Start
+
+#### Without Proxies (User-Agent Rotation Only)
+```python
+from scrapers.amazon_scraper import AmazonScraper
+
+scraper = AmazonScraper()
+result = scraper.scrape("laptop")  # User-agent rotates automatically
+```
+
+#### With Proxies (Recommended)
+```python
+from scrapers.base_scraper import BaseScraper
+
+# Configure once at startup
+BaseScraper.configure_proxies([
+    'http://proxy1.com:8080',
+    'http://user:pass@proxy2.com:3128',
+])
+```
+
+#### Using Environment Variables
+```bash
+# In .env file or terminal
+export SCRAPER_PROXIES="http://proxy1:8080,http://user:pass@proxy2:3128"
+```
+
+### Proxy Services (Recommended for Production)
+
+For reliable scraping, use paid proxy services:
+
+1. **BrightData** - https://brightdata.com/ (Premium residential proxies)
+2. **Oxylabs** - https://oxylabs.io/ (Residential & datacenter proxies)
+3. **ScraperAPI** - https://www.scraperapi.com/ (Easy integration)
+4. **Smartproxy** - https://smartproxy.com/ (Budget-friendly)
+
+⚠️ **Warning:** Free proxies are unreliable and insecure. Use only for testing.
+
+### Proxy Format
+
+```python
+# HTTP proxy
+'http://host:port'
+
+# With authentication
+'http://username:password@host:port'
+
+# Special characters in password? URL encode:
+from urllib.parse import quote
+proxy = f'http://user:{quote("p@ss!")}@host:port'
+```
+
+### Check Rotation Status
+
+```python
+status = BaseScraper.get_rotation_status()
+print(f"User Agents: {status['user_agents_count']}")
+print(f"Proxies: {status['available_proxies']}/{status['total_proxies']}")
+```
+
+### Best Practices
+
+1. **Use paid proxies** for production (residential proxies recommended)
+2. **Add rate limiting** - 2-5 second delays between requests
+3. **Monitor performance** - Check available proxy count regularly
+4. **Test proxies first** - Run `python test_rotation.py`
+5. **Secure credentials** - Use environment variables, never commit passwords
+
+### Testing
+
+Test your rotation setup:
+```bash
+python tests/test_rotation.py
+```
+
+Expected output:
+```
+✓ User-Agent Rotation
+✓ Proxy Rotation  
+✓ Rotation Manager
+✓ BaseScraper Integration
+🎉 All tests passed!
+```
+
+For detailed documentation, see inline code examples in `scrapers/rotation_config_example.py`.
+
+---
+
+## �🚀 Running the Application
 
 ### Start the Application
 
