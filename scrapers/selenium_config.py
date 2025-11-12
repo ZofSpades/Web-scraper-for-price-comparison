@@ -1,6 +1,7 @@
 """
 Selenium Configuration and Driver Manager
 Handles Selenium WebDriver setup with headless mode support.
+Enhanced with anti-detection features and dynamic content handling.
 """
 
 from selenium import webdriver
@@ -9,8 +10,11 @@ from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.by import By
+from selenium.common.exceptions import TimeoutException, NoSuchElementException
 from webdriver_manager.chrome import ChromeDriverManager
 import logging
+import time
+import random
 
 
 class SeleniumConfig:
@@ -31,23 +35,32 @@ class SeleniumConfig:
         self.window_size = window_size
         self.page_load_timeout = 30
         self.implicit_wait = 10
+        self.script_timeout = 30
         
         # Configure logging
         logging.getLogger('selenium').setLevel(logging.WARNING)
         logging.getLogger('urllib3').setLevel(logging.WARNING)
+        
+        # User agents pool for rotation
+        self.user_agents = [
+            'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+            'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36',
+            'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+            'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        ]
     
     def create_driver(self):
         """
-        Create and configure a Chrome WebDriver instance.
+        Create and configure a Chrome WebDriver instance with enhanced anti-detection.
         
         Returns:
             webdriver.Chrome: Configured Chrome WebDriver
         """
         chrome_options = Options()
         
-        # Headless mode
+        # Headless mode with enhanced settings
         if self.headless:
-            chrome_options.add_argument('--headless')
+            chrome_options.add_argument('--headless=new')  # New headless mode
             chrome_options.add_argument('--disable-gpu')
         
         # Performance and stability options
@@ -56,38 +69,94 @@ class SeleniumConfig:
         chrome_options.add_argument('--disable-dev-shm-usage')
         chrome_options.add_argument('--disable-blink-features=AutomationControlled')
         
-        # User agent (polite headers)
-        chrome_options.add_argument(
-            'user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) '
-            'AppleWebKit/537.36 (KHTML, like Gecko) '
-            'Chrome/119.0.0.0 Safari/537.36'
-        )
+        # Random user agent from pool
+        random_user_agent = random.choice(self.user_agents)
+        chrome_options.add_argument(f'user-agent={random_user_agent}')
         
-        # Additional options for headless stability
+        # Additional stealth options
         chrome_options.add_argument('--disable-extensions')
         chrome_options.add_argument('--disable-infobars')
         chrome_options.add_argument('--ignore-certificate-errors')
+        chrome_options.add_argument('--disable-web-security')
+        chrome_options.add_argument('--allow-running-insecure-content')
+        chrome_options.add_argument('--disable-features=IsolateOrigins,site-per-process')
+        
+        # Language and locale
+        chrome_options.add_argument('--lang=en-US')
+        chrome_options.add_experimental_option('prefs', {
+            'intl.accept_languages': 'en-US,en;q=0.9',
+        })
         
         # Experimental options to avoid detection
-        chrome_options.add_experimental_option('excludeSwitches', ['enable-automation'])
+        chrome_options.add_experimental_option('excludeSwitches', ['enable-automation', 'enable-logging'])
         chrome_options.add_experimental_option('useAutomationExtension', False)
         
         # Create driver with automatic driver management
-        service = Service(ChromeDriverManager().install())
+        try:
+            # Try with webdriver-manager
+            from webdriver_manager.chrome import ChromeDriverManager
+            import os
+            
+            driver_path = ChromeDriverManager().install()
+            
+            # Fix for Windows - get the actual chromedriver.exe path
+            if os.path.isdir(driver_path) or driver_path.endswith('THIRD_PARTY_NOTICES.chromedriver'):
+                # Navigate to the actual exe
+                driver_dir = os.path.dirname(driver_path)
+                if 'chromedriver-win32' in driver_dir:
+                    driver_dir = os.path.join(os.path.dirname(driver_dir), 'chromedriver-win32')
+                
+                # Find chromedriver.exe
+                if os.path.exists(os.path.join(driver_dir, 'chromedriver.exe')):
+                    driver_path = os.path.join(driver_dir, 'chromedriver.exe')
+                elif os.path.exists(os.path.join(driver_dir, 'chromedriver')):
+                    driver_path = os.path.join(driver_dir, 'chromedriver')
+            
+            service = Service(driver_path)
+        except Exception as e:
+            # Fallback to system ChromeDriver
+            logging.warning(f"ChromeDriverManager failed: {e}. Using system chromedriver.")
+            service = Service()
+        
         driver = webdriver.Chrome(service=service, options=chrome_options)
         
         # Set timeouts
         driver.set_page_load_timeout(self.page_load_timeout)
         driver.implicitly_wait(self.implicit_wait)
+        driver.set_script_timeout(self.script_timeout)
         
-        # Remove webdriver property to avoid detection
-        driver.execute_cdp_cmd('Page.addScriptToEvaluateOnNewDocument', {
-            'source': '''
-                Object.defineProperty(navigator, 'webdriver', {
-                    get: () => undefined
-                })
-            '''
-        })
+        # Enhanced anti-detection scripts
+        stealth_js = """
+            // Remove webdriver property
+            Object.defineProperty(navigator, 'webdriver', {
+                get: () => undefined
+            });
+            
+            // Override plugins array
+            Object.defineProperty(navigator, 'plugins', {
+                get: () => [1, 2, 3, 4, 5]
+            });
+            
+            // Override languages
+            Object.defineProperty(navigator, 'languages', {
+                get: () => ['en-US', 'en']
+            });
+            
+            // Chrome runtime
+            window.chrome = {
+                runtime: {}
+            };
+            
+            // Permissions query
+            const originalQuery = window.navigator.permissions.query;
+            window.navigator.permissions.query = (parameters) => (
+                parameters.name === 'notifications' ?
+                    Promise.resolve({ state:'denied' }) :
+                    originalQuery(parameters)
+            );
+        """
+        
+        driver.execute_cdp_cmd('Page.addScriptToEvaluateOnNewDocument', {'source': stealth_js})
         
         return driver
     
@@ -112,7 +181,8 @@ class SeleniumConfig:
 
 class SeleniumHelper:
     """
-    Helper utilities for Selenium operations.
+    Enhanced helper utilities for Selenium operations.
+    Provides intelligent wait mechanisms and element interaction methods.
     """
     
     @staticmethod
@@ -134,7 +204,7 @@ class SeleniumHelper:
                 EC.presence_of_element_located((by, value))
             )
             return element
-        except Exception:
+        except TimeoutException:
             return None
     
     @staticmethod
@@ -156,8 +226,77 @@ class SeleniumHelper:
                 EC.element_to_be_clickable((by, value))
             )
             return element
-        except Exception:
+        except TimeoutException:
             return None
+    
+    @staticmethod
+    def wait_for_any_element(driver, selectors, timeout=10):
+        """
+        Wait for any element from a list of selectors to appear.
+        
+        Args:
+            driver: Selenium WebDriver instance
+            selectors: List of tuples (By, value)
+            timeout: Maximum wait time in seconds
+            
+        Returns:
+            WebElement or None if timeout
+        """
+        try:
+            elements = WebDriverWait(driver, timeout).until(
+                lambda d: any(
+                    d.find_elements(by, value) for by, value in selectors
+                )
+            )
+            for by, value in selectors:
+                elements = driver.find_elements(by, value)
+                if elements:
+                    return elements[0]
+            return None
+        except TimeoutException:
+            return None
+    
+    @staticmethod
+    def wait_for_page_load(driver, timeout=30):
+        """
+        Wait for page to fully load including dynamic content.
+        
+        Args:
+            driver: Selenium WebDriver instance
+            timeout: Maximum wait time in seconds
+            
+        Returns:
+            bool: True if loaded successfully
+        """
+        try:
+            WebDriverWait(driver, timeout).until(
+                lambda d: d.execute_script('return document.readyState') == 'complete'
+            )
+            # Additional wait for dynamic content
+            time.sleep(1)
+            return True
+        except TimeoutException:
+            return False
+    
+    @staticmethod
+    def wait_for_ajax(driver, timeout=10):
+        """
+        Wait for AJAX/jQuery requests to complete.
+        
+        Args:
+            driver: Selenium WebDriver instance
+            timeout: Maximum wait time in seconds
+            
+        Returns:
+            bool: True if AJAX completed
+        """
+        try:
+            WebDriverWait(driver, timeout).until(
+                lambda d: d.execute_script('return jQuery.active == 0') if d.execute_script('return typeof jQuery != "undefined"') else True
+            )
+            return True
+        except:
+            return True  # jQuery might not be present
     
     @staticmethod
     def safe_find_element(driver, by, value):
@@ -174,8 +313,26 @@ class SeleniumHelper:
         """
         try:
             return driver.find_element(by, value)
-        except Exception:
+        except NoSuchElementException:
             return None
+    
+    @staticmethod
+    def safe_find_elements(driver, by, value):
+        """
+        Safely find multiple elements without throwing exception.
+        
+        Args:
+            driver: Selenium WebDriver instance
+            by: Locator strategy
+            value: Locator value
+            
+        Returns:
+            List of WebElements or empty list if not found
+        """
+        try:
+            return driver.find_elements(by, value)
+        except NoSuchElementException:
+            return []
     
     @staticmethod
     def get_text_safe(element, default='N/A'):
@@ -234,7 +391,7 @@ class SeleniumHelper:
         try:
             driver.find_element(by, value)
             return True
-        except Exception:
+        except NoSuchElementException:
             return False
     
     @staticmethod
@@ -248,5 +405,115 @@ class SeleniumHelper:
         """
         try:
             driver.execute_script("arguments[0].scrollIntoView(true);", element)
+            time.sleep(0.5)  # Wait for scroll animation
         except Exception:
             pass
+    
+    @staticmethod
+    def scroll_to_bottom(driver):
+        """
+        Scroll to the bottom of the page to load lazy content.
+        
+        Args:
+            driver: Selenium WebDriver instance
+        """
+        try:
+            driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
+            time.sleep(1)
+        except Exception:
+            pass
+    
+    @staticmethod
+    def human_like_delay(min_seconds=0.5, max_seconds=2.0):
+        """
+        Add a random delay to simulate human behavior.
+        
+        Args:
+            min_seconds: Minimum delay in seconds
+            max_seconds: Maximum delay in seconds
+        """
+        delay = random.uniform(min_seconds, max_seconds)
+        time.sleep(delay)
+    
+    @staticmethod
+    def click_element_safe(driver, element):
+        """
+        Safely click an element with retry and scroll logic.
+        
+        Args:
+            driver: Selenium WebDriver instance
+            element: WebElement to click
+            
+        Returns:
+            bool: True if clicked successfully
+        """
+        try:
+            # Try normal click
+            element.click()
+            return True
+        except Exception:
+            try:
+                # Scroll to element and try again
+                SeleniumHelper.scroll_to_element(driver, element)
+                element.click()
+                return True
+            except Exception:
+                try:
+                    # Try JavaScript click as last resort
+                    driver.execute_script("arguments[0].click();", element)
+                    return True
+                except Exception:
+                    return False
+    
+    @staticmethod
+    def take_screenshot(driver, filename='screenshot.png'):
+        """
+        Take a screenshot for debugging purposes.
+        
+        Args:
+            driver: Selenium WebDriver instance
+            filename: Output filename
+            
+        Returns:
+            bool: True if successful
+        """
+        try:
+            driver.save_screenshot(filename)
+            return True
+        except Exception:
+            return False
+    
+    @staticmethod
+    def handle_lazy_loading(driver, scroll_pause_time=2, max_scrolls=5):
+        """
+        Handle lazy loading by scrolling down the page incrementally.
+        
+        Args:
+            driver: Selenium WebDriver instance
+            scroll_pause_time: Time to wait between scrolls
+            max_scrolls: Maximum number of scroll attempts
+            
+        Returns:
+            bool: True if completed
+        """
+        try:
+            last_height = driver.execute_script("return document.body.scrollHeight")
+            scrolls = 0
+            
+            while scrolls < max_scrolls:
+                # Scroll down
+                driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
+                time.sleep(scroll_pause_time)
+                
+                # Calculate new height
+                new_height = driver.execute_script("return document.body.scrollHeight")
+                
+                if new_height == last_height:
+                    break
+                    
+                last_height = new_height
+                scrolls += 1
+            
+            return True
+        except Exception:
+            return False
