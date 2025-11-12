@@ -106,8 +106,6 @@ class SeleniumConfig:
         chrome_options.add_argument('--disable-extensions')
         chrome_options.add_argument('--disable-infobars')
         chrome_options.add_argument('--ignore-certificate-errors')
-        chrome_options.add_argument('--disable-web-security')
-        chrome_options.add_argument('--allow-running-insecure-content')
         chrome_options.add_argument('--disable-features=IsolateOrigins,site-per-process')
         
         # Language and locale
