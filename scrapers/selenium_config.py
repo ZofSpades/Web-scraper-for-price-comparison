@@ -214,13 +214,19 @@ class SeleniumHelper:
     Provides intelligent wait mechanisms and element interaction methods.
     """
     
-    @staticmethod
-    def wait_for_element(driver, by, value, timeout=10):
+    def __init__(self, driver):
+        """
+        Initialize SeleniumHelper with a WebDriver instance.
+        
+        Args:
+        """
+        self.driver = driver
+    
+    def wait_for_element(self, by, value, timeout=10):
         """
         Wait for an element to be present.
         
         Args:
-            driver: Selenium WebDriver instance
             by: Locator strategy (By.ID, By.CLASS_NAME, etc.)
             value: Locator value
             timeout: Maximum wait time in seconds
@@ -229,20 +235,18 @@ class SeleniumHelper:
             WebElement or None if timeout
         """
         try:
-            element = WebDriverWait(driver, timeout).until(
+            element = WebDriverWait(self.driver, timeout).until(
                 EC.presence_of_element_located((by, value))
             )
             return element
         except TimeoutException:
             return None
     
-    @staticmethod
-    def wait_for_element_clickable(driver, by, value, timeout=10):
+    def wait_for_element_clickable(self, by, value, timeout=10):
         """
         Wait for an element to be clickable.
         
         Args:
-            driver: Selenium WebDriver instance
             by: Locator strategy
             value: Locator value
             timeout: Maximum wait time in seconds
@@ -251,20 +255,18 @@ class SeleniumHelper:
             WebElement or None if timeout
         """
         try:
-            element = WebDriverWait(driver, timeout).until(
+            element = WebDriverWait(self.driver, timeout).until(
                 EC.element_to_be_clickable((by, value))
             )
             return element
         except TimeoutException:
             return None
     
-    @staticmethod
-    def wait_for_any_element(driver, selectors, timeout=10):
+    def wait_for_any_element(self, selectors, timeout=10):
         """
         Wait for any element from a list of selectors to appear.
         
         Args:
-            driver: Selenium WebDriver instance
             selectors: List of tuples (By, value)
             timeout: Maximum wait time in seconds
             
@@ -272,33 +274,31 @@ class SeleniumHelper:
             WebElement or None if timeout
         """
         try:
-            elements = WebDriverWait(driver, timeout).until(
+            elements = WebDriverWait(self.driver, timeout).until(
                 lambda d: any(
                     d.find_elements(by, value) for by, value in selectors
                 )
             )
             for by, value in selectors:
-                elements = driver.find_elements(by, value)
+                elements = self.self.driver.find_elements(by, value)
                 if elements:
                     return elements[0]
             return None
         except TimeoutException:
             return None
     
-    @staticmethod
-    def wait_for_page_load(driver, timeout=30):
+    def wait_for_page_load(self, timeout=30):
         """
         Wait for page to fully load including dynamic content.
         
         Args:
-            driver: Selenium WebDriver instance
             timeout: Maximum wait time in seconds
             
         Returns:
             bool: True if loaded successfully
         """
         try:
-            WebDriverWait(driver, timeout).until(
+            WebDriverWait(self.driver, timeout).until(
                 lambda d: d.execute_script('return document.readyState') == 'complete'
             )
             # Additional wait for dynamic content
@@ -307,33 +307,29 @@ class SeleniumHelper:
         except TimeoutException:
             return False
     
-    @staticmethod
-    def wait_for_ajax(driver, timeout=10):
+    def wait_for_ajax(self, timeout=10):
         """
         Wait for AJAX/jQuery requests to complete.
         
         Args:
-            driver: Selenium WebDriver instance
             timeout: Maximum wait time in seconds
             
         Returns:
             bool: True if AJAX completed
         """
         try:
-            WebDriverWait(driver, timeout).until(
+            WebDriverWait(self.driver, timeout).until(
                 lambda d: d.execute_script('return jQuery.active == 0') if d.execute_script('return typeof jQuery != "undefined"') else True
             )
             return True
         except:
             return True  # jQuery might not be present
     
-    @staticmethod
-    def safe_find_element(driver, by, value):
+    def safe_find_element(self, by, value):
         """
         Safely find an element without throwing exception.
         
         Args:
-            driver: Selenium WebDriver instance
             by: Locator strategy
             value: Locator value
             
@@ -341,17 +337,15 @@ class SeleniumHelper:
             WebElement or None if not found
         """
         try:
-            return driver.find_element(by, value)
+            return self.driver.find_element(by, value)
         except NoSuchElementException:
             return None
     
-    @staticmethod
-    def safe_find_elements(driver, by, value):
+    def safe_find_elements(self, by, value):
         """
         Safely find multiple elements without throwing exception.
         
         Args:
-            driver: Selenium WebDriver instance
             by: Locator strategy
             value: Locator value
             
@@ -359,7 +353,7 @@ class SeleniumHelper:
             List of WebElements or empty list if not found
         """
         try:
-            return driver.find_elements(by, value)
+            return self.self.driver.find_elements(by, value)
         except NoSuchElementException:
             return []
     
@@ -404,13 +398,11 @@ class SeleniumHelper:
         except Exception:
             return default
     
-    @staticmethod
-    def is_element_present(driver, by, value):
+    def is_element_present(self, by, value):
         """
         Check if an element is present on the page.
         
         Args:
-            driver: Selenium WebDriver instance
             by: Locator strategy
             value: Locator value
             
@@ -418,36 +410,30 @@ class SeleniumHelper:
             bool: True if element present, False otherwise
         """
         try:
-            driver.find_element(by, value)
+            self.driver.find_element(by, value)
             return True
         except NoSuchElementException:
             return False
     
-    @staticmethod
-    def scroll_to_element(driver, element):
+    def scroll_to_element(self, element):
         """
         Scroll to make an element visible.
         
         Args:
-            driver: Selenium WebDriver instance
             element: WebElement to scroll to
         """
         try:
-            driver.execute_script("arguments[0].scrollIntoView(true);", element)
+            self.driver.execute_script("arguments[0].scrollIntoView(true);", element)
             time.sleep(0.5)  # Wait for scroll animation
         except Exception:
             pass
     
-    @staticmethod
-    def scroll_to_bottom(driver):
+    def scroll_to_bottom(self):
         """
         Scroll to the bottom of the page to load lazy content.
-        
-        Args:
-            driver: Selenium WebDriver instance
         """
         try:
-            driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
+            self.driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
             time.sleep(1)
         except Exception:
             pass
@@ -464,13 +450,11 @@ class SeleniumHelper:
         delay = random.uniform(min_seconds, max_seconds)
         time.sleep(delay)
     
-    @staticmethod
-    def click_element_safe(driver, element):
+    def click_element_safe(self, element):
         """
         Safely click an element with retry and scroll logic.
         
         Args:
-            driver: Selenium WebDriver instance
             element: WebElement to click
             
         Returns:
@@ -483,42 +467,38 @@ class SeleniumHelper:
         except Exception:
             try:
                 # Scroll to element and try again
-                SeleniumHelper.scroll_to_element(driver, element)
+                self.scroll_to_element(element)
                 element.click()
                 return True
             except Exception:
                 try:
                     # Try JavaScript click as last resort
-                    driver.execute_script("arguments[0].click();", element)
+                    self.driver.execute_script("arguments[0].click();", element)
                     return True
                 except Exception:
                     return False
     
-    @staticmethod
-    def take_screenshot(driver, filename='screenshot.png'):
+    def take_screenshot(self, filename='screenshot.png'):
         """
         Take a screenshot for debugging purposes.
         
         Args:
-            driver: Selenium WebDriver instance
             filename: Output filename
             
         Returns:
             bool: True if successful
         """
         try:
-            driver.save_screenshot(filename)
+            self.driver.save_screenshot(filename)
             return True
         except Exception:
             return False
     
-    @staticmethod
-    def handle_lazy_loading(driver, scroll_pause_time=2, max_scrolls=5):
+    def handle_lazy_loading(self, scroll_pause_time=2, max_scrolls=5):
         """
         Handle lazy loading by scrolling down the page incrementally.
         
         Args:
-            driver: Selenium WebDriver instance
             scroll_pause_time: Time to wait between scrolls
             max_scrolls: Maximum number of scroll attempts
             
@@ -526,16 +506,16 @@ class SeleniumHelper:
             bool: True if completed
         """
         try:
-            last_height = driver.execute_script("return document.body.scrollHeight")
+            last_height = self.driver.execute_script("return document.body.scrollHeight")
             scrolls = 0
             
             while scrolls < max_scrolls:
                 # Scroll down
-                driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
+                self.driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
                 time.sleep(scroll_pause_time)
                 
                 # Calculate new height
-                new_height = driver.execute_script("return document.body.scrollHeight")
+                new_height = self.driver.execute_script("return document.body.scrollHeight")
                 
                 if new_height == last_height:
                     break
