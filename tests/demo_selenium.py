@@ -25,14 +25,20 @@ def demo_automatic_fallback():
     result = scraper.scrape("laptop")
     duration = time.time() - start
     
+    # Check if scraping was successful
+    if not result or result.get('error'):
+        print(f"\n✗ Scraping failed: {result.get('error', 'Unknown error')}")
+        return
+    
     print(f"\n✓ Scraping completed in {duration:.2f} seconds")
     print(f"✓ Method used: {scraper.get_scraping_method().upper()}")
     print(f"\nResult:")
-    print(f"  Site: {result['site']}")
-    print(f"  Title: {result['title'][:60]}...")
-    print(f"  Price: {result['price']}")
-    print(f"  Rating: {result['rating']}")
-    print(f"  Availability: {result['availability']}")
+    print(f"  Site: {result.get('site', 'N/A')}")
+    title = result.get('title', 'N/A')
+    print(f"  Title: {title[:60] if title != 'N/A' else title}...")
+    print(f"  Price: {result.get('price', 'N/A')}")
+    print(f"  Rating: {result.get('rating', 'N/A')}")
+    print(f"  Availability: {result.get('availability', 'N/A')}")
 
 
 def demo_forced_selenium():
@@ -52,13 +58,19 @@ def demo_forced_selenium():
     result = scraper.scrape("smartphone")
     duration = time.time() - start
     
+    # Check if scraping was successful
+    if not result or result.get('error'):
+        print(f"\n✗ Scraping failed: {result.get('error', 'Unknown error')}")
+        return
+    
     print(f"\n✓ Scraping completed in {duration:.2f} seconds")
     print(f"✓ Method used: {scraper.get_scraping_method().upper()}")
     print(f"\nResult:")
-    print(f"  Site: {result['site']}")
-    print(f"  Title: {result['title'][:60]}...")
-    print(f"  Price: {result['price']}")
-    print(f"  Rating: {result['rating']}")
+    print(f"  Site: {result.get('site', 'N/A')}")
+    title = result.get('title', 'N/A')
+    print(f"  Title: {title[:60] if title != 'N/A' else title}...")
+    print(f"  Price: {result.get('price', 'N/A')}")
+    print(f"  Rating: {result.get('rating', 'N/A')}")
 
 
 def demo_retry_mechanism():
@@ -78,10 +90,16 @@ def demo_retry_mechanism():
     result = scraper.scrape("wireless mouse")
     duration = time.time() - start
     
+    # Check if scraping was successful
+    if not result or result.get('error'):
+        print(f"\n✗ Scraping failed: {result.get('error', 'Unknown error')}")
+        return
+    
     print(f"\n✓ Scraping completed in {duration:.2f} seconds")
     print(f"\nResult:")
-    print(f"  Title: {result['title'][:60]}...")
-    print(f"  Price: {result['price']}")
+    title = result.get('title', 'N/A')
+    print(f"  Title: {title[:60] if title != 'N/A' else title}...")
+    print(f"  Price: {result.get('price', 'N/A')}")
 
 
 def demo_statistics():
@@ -96,13 +114,18 @@ def demo_statistics():
     print("Scraping Amazon...")
     result = scraper.scrape("headphones")
     
+    # Check if scraping was successful
+    if not result or result.get('error'):
+        print(f"\n✗ Scraping failed: {result.get('error', 'Unknown error')}")
+        return
+    
     stats = scraper.get_scraping_stats()
     
     print(f"\n✓ Scraping Statistics:")
-    print(f"  Method Used: {stats['method_used']}")
-    print(f"  Selenium Mode: {stats['selenium_mode']}")
-    print(f"  Retry Attempts: {stats['retry_attempts']}")
-    print(f"  Headless: {stats['headless']}")
+    print(f"  Method Used: {stats.get('method_used', 'N/A')}")
+    print(f"  Selenium Mode: {stats.get('selenium_mode', 'N/A')}")
+    print(f"  Retry Attempts: {stats.get('retry_attempts', 'N/A')}")
+    print(f"  Headless: {stats.get('headless', 'N/A')}")
 
 
 def main():
