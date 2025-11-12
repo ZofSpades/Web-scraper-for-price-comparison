@@ -9,6 +9,10 @@
 - [Project Structure](#project-structure)
 - [Features](#features)
 - [Supported E-commerce Sites](#supported-e-commerce-sites)
+- [Advanced Features](#advanced-features)
+  - [Selenium Integration](#selenium-integration)
+  - [Proxy & User-Agent Rotation](#proxy--user-agent-rotation)
+- [Testing](#testing)
 - [Troubleshooting](#troubleshooting)
 
 ---
@@ -161,6 +165,29 @@ PESU_EC_CSE_K_P60_Web_Scraper_for_Price_Comparison_Team-5/
 ├── requirements.txt                 # Python dependencies
 ├── SETUP.md                         # This documentation file
 ├── .gitignore                       # Git ignore rules
+├── .flake8                          # Flake8 linter configuration
+├── .pylintrc                        # Pylint configuration
+├── pyproject.toml                   # Black, isort, pytest config
+│
+├── .github/                         # GitHub configuration
+│   └── workflows/                   # GitHub Actions workflows
+│       ├── test.yml                 # Comprehensive test suite (multi-version)
+│       ├── ci.yml                   # Quick CI check (all branches)
+│       └── code-quality.yml         # Code quality & security checks
+│
+├── tests/                           # Test suite directory
+│   ├── __init__.py                  # Test package initialization
+│   ├── test_regression_suite.py    # Test runner for CI/CD
+│   ├── test_TC_CMP_01.py           # Price comparison tests
+│   ├── test_TC_ERR_01.py           # Error handling tests
+│   ├── test_TC_EXP_01.py           # Export functionality tests
+│   ├── test_TC_INP_01.py           # Valid input validation tests
+│   ├── test_TC_INP_02.py           # Invalid input validation tests
+│   ├── test_TC_NRM_01.py           # Price normalization tests
+│   ├── test_TC_PERF_01.py          # Performance tests
+│   ├── test_TC_SCR_01.py           # Scraper manager tests
+│   ├── test_TC_SCR_02.py           # Scraper registry tests
+│   └── test_TC_UI_01.py            # Flask UI tests
 │
 ├── web/                             # Flask web application
 │   ├── app.py                       # Main Flask routes and logic
@@ -168,7 +195,8 @@ PESU_EC_CSE_K_P60_Web_Scraper_for_Price_Comparison_Team-5/
 │
 ├── scrapers/                        # Scraping modules
 │   ├── scraper_manager.py          # Orchestrates all scrapers
-│   ├── scraper_controller.py       # Handles concurrent scraping
+│   ├── async_scraper_controller.py # Async concurrent scraping controller
+│   ├── scraper_controller.py       # Legacy scraper controller
 │   ├── scraper_registry.py         # Dynamic scraper registration
 │   ├── base_scraper.py             # Abstract base class
 │   ├── hybrid_scraper.py           # Static + Selenium hybrid
@@ -182,7 +210,7 @@ PESU_EC_CSE_K_P60_Web_Scraper_for_Price_Comparison_Team-5/
 │
 ├── database/                        # Database layer
 │   ├── database.py                 # SQLite database manager
-│   ├── schema.sql                  # Database schema
+│   ├── schema_sqlite.sql           # SQLite database schema
 │   └── __init__.py
 │
 ├── pricing/                         # Advanced pricing utilities
@@ -195,7 +223,7 @@ PESU_EC_CSE_K_P60_Web_Scraper_for_Price_Comparison_Team-5/
 │
 ├── utils/                           # Utility modules
 │   ├── export_utils.py             # CSV/PDF export
-│   ├── input_validator.py          # Input validation
+│   ├── input_handler.py            # Input validation
 │   └── __init__.py
 │
 └── templates/                       # HTML templates
@@ -212,9 +240,12 @@ PESU_EC_CSE_K_P60_Web_Scraper_for_Price_Comparison_Team-5/
 
 ### 1. **Real-time Price Comparison**
 - Search for any product by name
-- Automatically scrapes 5 e-commerce sites in parallel
+- **Asynchronous concurrent scraping** - all 5 sites scraped in parallel
+- **Fast response time** - typically under 15 seconds (vs 30+ seconds with sequential scraping)
+- **Optimized timeouts** - 10 seconds per scraper, 15 seconds total (5s buffer for overhead)
 - Results sorted by best price
 - Shows product details: title, price, rating, availability
+- **Graceful degradation** - returns partial results if some scrapers fail
 
 ### 2. **Search History**
 - All searches automatically saved to database
@@ -271,6 +302,533 @@ The application currently scrapes the following Indian e-commerce websites:
 
 ---
 
+## 🚀 Advanced Features
+
+### Selenium Integration
+
+The scraper includes advanced Selenium integration for handling JavaScript-rendered websites and avoiding bot detection.
+
+#### Overview
+
+- **Intelligent Fallback**: Tries static scraping first for speed, automatically falls back to Selenium for dynamic content
+- **Anti-Detection Features**: User-agent rotation, WebDriver masking, browser fingerprint spoofing
+- **Retry Mechanism**: Configurable retry attempts with delays for improved reliability
+- **Advanced Wait Logic**: Smart waiting for page load, AJAX requests, and lazy-loaded content
+
+#### Key Components
+
+**1. SeleniumConfig** (`scrapers/selenium_config.py`)
+- Manages WebDriver creation and configuration
+- Implements anti-detection measures
+- Headless mode support with optimized performance settings
+
+**2. SeleniumHelper Class**
+Provides utility methods for robust Selenium operations:
+
+| Method | Purpose |
+|--------|---------|
+| `wait_for_element()` | Wait for specific element to appear |
+| `wait_for_any_element()` | Wait for any element from a list |
+| `wait_for_page_load()` | Wait for complete page load including dynamic content |
+| `wait_for_ajax()` | Wait for AJAX/jQuery requests to complete |
+| `safe_find_element()` | Find element without throwing exceptions |
+| `safe_find_elements()` | Find multiple elements safely |
+| `scroll_to_bottom()` | Scroll to trigger lazy loading |
+| `handle_lazy_loading()` | Handle infinite scroll pages |
+| `human_like_delay()` | Add random delays (0.5-2s) to simulate human behavior |
+| `click_element_safe()` | Robust clicking with scroll and JS fallback |
+| `take_screenshot()` | Capture screenshots for debugging |
+
+**3. HybridScraper** (`scrapers/hybrid_scraper.py`)
+Base class for scrapers with intelligent fallback logic:
+
+```python
+class HybridScraper(BaseScraper):
+    def scrape(self, query: str) -> dict:
+        # Try static scraping first
+        result = self._scrape_static(query)
+        
+        # Fallback to Selenium if needed
+        if self._should_fallback_to_selenium(result):
+            result = self._scrape_selenium(query)
+        
+        return result
+```
+
+#### Anti-Detection Features
+
+**User-Agent Rotation**
+- Pool of 20+ realistic user agents
+- Randomly rotates on each request
+- Mimics real browsers (Chrome, Firefox, Safari, Edge)
+
+**WebDriver Property Masking**
+```javascript
+// Hides automation indicators
+Object.defineProperty(navigator, 'webdriver', {get: () => undefined});
+delete navigator.__proto__.webdriver;
+```
+
+**Browser Fingerprint Spoofing**
+- Realistic plugin arrays
+- Permission query handling
+- Chrome runtime emulation
+- Language and timezone settings
+
+**Stealth Techniques**
+- `--disable-blink-features=AutomationControlled`
+- `--disable-infobars`
+- `--disable-dev-shm-usage`
+- Excludes "enable-automation" switch
+- Sets realistic window sizes
+
+#### Intelligent Fallback Detection
+
+The scraper automatically detects when Selenium is needed:
+
+1. **Missing Data Detection**: Checks if critical fields (title, price) are empty
+2. **JavaScript Indicators**: Looks for "Loading...", "Please wait", skeleton loaders
+3. **Bot Detection**: Detects CAPTCHA, "Access Denied", bot challenge messages
+4. **Content Length Check**: Flags suspiciously short HTML responses
+
+```python
+def _should_fallback_to_selenium(self, result: dict) -> bool:
+    # Check for missing/invalid data
+    if not result.get('title') or not result.get('price'):
+        return True
+    
+    # Check for JavaScript loading indicators
+    html = result.get('raw_html', '')
+    js_indicators = ['loading...', 'please wait', 'skeleton']
+    if any(indicator in html.lower() for indicator in js_indicators):
+        return True
+    
+    # Check for bot detection
+    bot_messages = ['captcha', 'access denied', 'unusual traffic']
+    if any(msg in html.lower() for msg in bot_messages):
+        return True
+    
+    return False
+```
+
+#### Retry Mechanism
+
+Configurable retry logic for improved reliability:
+
+```python
+def _scrape_with_retry(self, query: str, max_retries: int = 2) -> dict:
+    for attempt in range(max_retries):
+        try:
+            result = self.scrape(query)
+            if result and result.get('title'):
+                return result
+        except Exception as e:
+            if attempt < max_retries - 1:
+                time.sleep(1)  # Delay between retries
+                continue
+            raise
+```
+
+#### Usage Examples
+
+**Basic Selenium Scraping**:
+```python
+from scrapers.selenium_config import SeleniumConfig, SeleniumHelper
+
+# Create driver
+config = SeleniumConfig(headless=True, window_size="1920,1080")
+driver = config.create_driver()
+helper = SeleniumHelper(driver)
+
+# Navigate and wait
+driver.get("https://example.com")
+helper.wait_for_page_load()
+
+# Find elements safely
+element = helper.safe_find_element(By.CSS_SELECTOR, ".product-title")
+if element:
+    title = element.text
+
+# Handle lazy loading
+helper.handle_lazy_loading(scroll_pause=2, max_scrolls=5)
+
+# Clean up
+driver.quit()
+```
+
+**Using Demo Script**:
+```bash
+python tests/demo_selenium.py
+```
+
+The demo showcases:
+- Anti-detection features in action
+- User-agent rotation
+- Wait mechanisms
+- Lazy loading handling
+- Screenshot capture
+- Human-like interactions
+
+#### Best Practices
+
+1. **Use Static Scraping First**: Always try static scraping before Selenium for better performance
+2. **Implement Timeouts**: Set reasonable timeouts to avoid hanging (default: 10s per site)
+3. **Handle Errors Gracefully**: Use try-except blocks and return partial results
+4. **Add Human-like Delays**: Use `human_like_delay()` between actions
+5. **Monitor for Changes**: Websites update frequently; test scrapers regularly
+6. **Use Headless Mode**: Run headless in production for better resource usage
+7. **Clean Up Resources**: Always call `driver.quit()` to free resources
+
+#### Performance Considerations
+
+- **Static Scraping**: ~1-2 seconds per site
+- **Selenium Scraping**: ~3-5 seconds per site
+- **Memory Usage**: ~100-200 MB per Selenium instance
+- **Concurrent Limit**: Recommend max 3-5 parallel Selenium instances
+
+#### Troubleshooting
+
+**ChromeDriver Issues**:
+```bash
+pip install --upgrade selenium webdriver-manager
+```
+
+**Selenium Timeout**:
+- Increase timeout in SeleniumHelper methods
+- Check internet connection
+- Verify site is accessible
+
+**Bot Detection**:
+- Ensure anti-detection features are enabled
+- Add more delays with `human_like_delay()`
+- Rotate user agents more frequently
+- Consider using proxy rotation (see next section)
+
+### Proxy & User-Agent Rotation
+
+The scraper includes built-in support for proxy and user-agent rotation to prevent IP bans and bot detection.
+
+#### Quick Start
+
+Proxy rotation is handled automatically when configured in environment variables or `scrapers/selenium_config.py`.
+
+#### Features
+
+- **20+ User Agents**: Realistic browser user agents from Chrome, Firefox, Safari, Edge
+- **Automatic Rotation**: User agents rotate on each request
+- **Proxy Support**: Configure HTTP/HTTPS/SOCKS proxies
+- **Failure Handling**: Automatic proxy rotation on failure
+- **Success Tracking**: Monitors proxy success rates
+
+#### Configuration
+
+**Method 1: Environment Variables**
+```bash
+# Single proxy
+export HTTP_PROXY="http://proxy-server:port"
+export HTTPS_PROXY="http://proxy-server:port"
+
+# With authentication
+export HTTP_PROXY="http://user:pass@proxy-server:port"
+```
+
+**Method 2: Code Configuration**
+```python
+from scrapers.selenium_config import SeleniumConfig
+
+# With proxy
+config = SeleniumConfig(
+    headless=True,
+    proxy="http://proxy-server:port"
+)
+driver = config.create_driver()
+```
+
+#### User-Agent Pool
+
+The scraper includes 20+ realistic user agents:
+- Chrome (Windows, Mac, Linux)
+- Firefox (Windows, Mac, Linux)
+- Safari (Mac, iOS)
+- Edge (Windows)
+
+User agents are randomly selected on each request to avoid detection patterns.
+
+#### Proxy Services
+
+**Free Proxies** (testing only):
+- Free Proxy List: https://free-proxy-list.net/
+- ProxyScrape: https://proxyscrape.com/
+
+**Paid Proxies** (production):
+- Bright Data: https://brightdata.com/
+- Oxylabs: https://oxylabs.io/
+- Smartproxy: https://smartproxy.com/
+
+#### Best Practices
+
+1. **Rotate Frequently**: Change user agents on each request
+2. **Use Quality Proxies**: Free proxies are unreliable; invest in paid proxies for production
+3. **Monitor Success Rates**: Track which proxies work best
+4. **Add Delays**: Combine with human-like delays for better results
+5. **Respect Robots.txt**: Check site policies before aggressive scraping
+6. **Handle Failures**: Implement retry logic with different proxies
+
+#### Testing Rotation
+
+Run the rotation tests:
+```bash
+pytest tests/test_rotation.py -v
+```
+
+Tests verify:
+- User-agent rotation works correctly
+- Proxy configuration is applied
+- Fallback mechanisms function
+- Multiple requests use different agents
+
+---
+
+## 🧪 Testing
+
+### Test Suite Overview
+
+The project includes a comprehensive test suite for GitHub CI/CD integration, covering all critical functionality areas.
+
+### Running Tests
+
+**Install pytest (if not already installed):**
+```bash
+pip install pytest
+```
+
+**Run all tests:**
+```bash
+pytest tests/
+```
+
+**Run specific test:**
+```bash
+pytest tests/test_TC_CMP_01.py
+```
+
+**Run with verbose output:**
+```bash
+pytest tests/ -v
+```
+
+**Run regression suite (CI/CD):**
+```bash
+python tests/test_regression_suite.py
+```
+
+### Test Cases
+
+#### 1. **TC_CMP_01** - Price Comparison Ranking
+- **File:** `tests/test_TC_CMP_01.py`
+- **Purpose:** Validates that `rank_offers()` correctly sorts products by price
+- **Coverage:** Pricing comparison logic
+
+#### 2. **TC_ERR_01** - Error Handling
+- **File:** `tests/test_TC_ERR_01.py`
+- **Purpose:** Tests error handling for invalid scraper responses
+- **Coverage:** Error management
+
+#### 3. **TC_EXP_01** - Export Functionality
+- **File:** `tests/test_TC_EXP_01.py`
+- **Purpose:** Validates CSV export functionality
+- **Coverage:** Data export utilities
+
+#### 4. **TC_INP_01** - Valid Input Validation
+- **File:** `tests/test_TC_INP_01.py`
+- **Purpose:** Tests input validation for product names
+- **Coverage:** Input validation (valid cases)
+
+#### 5. **TC_INP_02** - Invalid Input Validation
+- **File:** `tests/test_TC_INP_02.py`
+- **Purpose:** Tests rejection of invalid/empty inputs
+- **Coverage:** Input validation (edge cases)
+
+#### 6. **TC_NRM_01** - Price Normalization
+- **File:** `tests/test_TC_NRM_01.py`
+- **Purpose:** Validates price parsing and normalization
+- **Coverage:** Price parsing utilities
+
+#### 7. **TC_PERF_01** - Performance Testing
+- **File:** `tests/test_TC_PERF_01.py`
+- **Purpose:** Ensures scraping completes within performance threshold (<5s for single scraper)
+- **Coverage:** Performance benchmarks
+
+#### 8. **TC_SCR_01** - Scraper Manager
+- **File:** `tests/test_TC_SCR_01.py`
+- **Purpose:** Tests scraper manager orchestration
+- **Coverage:** ScraperManager integration
+
+#### 9. **TC_SCR_02** - Scraper Registry
+- **File:** `tests/test_TC_SCR_02.py`
+- **Purpose:** Validates dynamic scraper registration/unregistration
+- **Coverage:** ScraperRegistry functionality
+
+#### 10. **TC_UI_01** - Flask Routes
+- **File:** `tests/test_TC_UI_01.py`
+- **Purpose:** Tests Flask application routes and responses
+- **Coverage:** Web application endpoints
+
+### GitHub CI/CD Integration
+
+The test suite is fully integrated with GitHub Actions for automated testing.
+
+#### Workflow Files
+
+Located in `.github/workflows/`:
+
+1. **`test.yml`** - Comprehensive Test Suite
+   - Runs on: push/PR to main, develop, feature/async-docs-cleanup
+   - Tests on: Python 3.8, 3.9, 3.10, 3.11
+   - Includes: Code quality checks, coverage reports
+   - Checks: Black, isort, flake8, pylint, bandit
+   - Duration: ~3-4 minutes
+
+2. **`ci.yml`** - Quick CI Check
+   - Runs on: push to main, develop, feature/async-docs-cleanup
+   - Tests on: Python 3.11
+   - Fast regression suite (fail-fast mode)
+   - Duration: ~30-60 seconds
+
+3. **`code-quality.yml`** - Code Quality & Security
+   - Runs on: push/PR to main, develop, feature/async-docs-cleanup
+   - Tools: Black, isort, flake8, pylint, bandit, safety
+   - Generates security reports
+   - Non-blocking (continues on errors)
+   - Duration: ~2-3 minutes
+
+#### Branch Strategy
+
+**Development Workflow:**
+```
+feature/async-docs-cleanup → develop → main
+```
+
+1. **feature/async-docs-cleanup** - Active development branch
+   - Complete all changes here
+   - CI/CD runs on every push
+   - Merge to develop when ready
+
+2. **develop** - Integration branch
+   - Receives merges from feature branches
+   - CI/CD validates integration
+   - Merge to main for teacher review
+
+3. **main** - Production/Review branch
+   - Teacher reviews and approves
+   - Final merge happens here
+   - Protected by CI/CD checks
+
+#### How It Works
+
+**On every push/pull request:**
+1. GitHub Actions automatically triggers
+2. Sets up Python environment
+3. Installs dependencies (with caching)
+4. Runs regression suite: `python test_regression_suite.py`
+5. Runs full test suite: `pytest -v --cov`
+6. Uploads coverage reports (Python 3.11 only)
+7. Reports pass/fail status on commit
+
+**Viewing Results:**
+- Go to repository → "Actions" tab
+- Click on any workflow run to see details
+- Green ✓ = All tests passed
+- Red ✗ = Tests failed (click for details)
+
+**Manual Trigger:**
+- Go to "Actions" tab → "Run Test Suite"
+- Click "Run workflow" button
+- Select branch and run
+
+**Key Features:**
+- Fast execution for CI/CD pipelines
+- Isolated unit tests (no external dependencies)
+- Pip package caching for faster builds
+- Matrix testing across Python versions
+- Exit codes for CI/CD pass/fail status
+
+**Regression Suite:**
+- **File:** `tests/test_regression_suite.py`
+- **Usage:** `python tests/test_regression_suite.py`
+- **Behavior:** Runs all tests, fails fast on first error
+- **Exit Code:** 0 (pass) or non-zero (fail)
+
+### Test Coverage Areas
+
+| Area | Test Cases | Coverage |
+|------|-----------|----------|
+| Price Comparison | TC_CMP_01 | Ranking logic |
+| Error Handling | TC_ERR_01 | Exception management |
+| Data Export | TC_EXP_01 | CSV generation |
+| Input Validation | TC_INP_01, TC_INP_02 | Input sanitization |
+| Price Parsing | TC_NRM_01 | Normalization |
+| Performance | TC_PERF_01 | Speed benchmarks |
+| Scraping | TC_SCR_01, TC_SCR_02 | Core functionality |
+| Web Interface | TC_UI_01 | Flask routes |
+
+### Code Quality Tools
+
+The project uses industry-standard tools for code quality and security:
+
+#### Formatting & Style
+- **Black** - Automatic code formatting (PEP 8 compliant)
+- **isort** - Import statement sorting and organization
+- **flake8** - Style guide enforcement and linting
+- **pylint** - Comprehensive code analysis
+
+#### Security & Safety
+- **Bandit** - Security vulnerability scanning
+- **Safety** - Dependency vulnerability checking
+
+#### Running Locally
+
+**Install quality tools:**
+```bash
+pip install black isort flake8 pylint bandit safety
+```
+
+**Format code:**
+```bash
+black .
+isort .
+```
+
+**Check code quality:**
+```bash
+flake8 .
+pylint **/*.py
+```
+
+**Security scan:**
+```bash
+bandit -r . -ll
+safety check
+```
+
+#### Configuration Files
+
+- `.flake8` - Flake8 configuration
+- `.pylintrc` - Pylint settings
+- `pyproject.toml` - Black, isort, pytest configuration
+
+### Best Practices
+
+- Tests use **mock scrapers** (no actual web requests)
+- Fast execution (< 5 seconds total)
+- Isolated from external dependencies
+- Deterministic results for CI/CD
+- Clear assertions for debugging
+- Code formatted with Black before commits
+- Security scanned with Bandit
+
+---
+
 ## 🔧 Troubleshooting
 
 ### Common Issues and Solutions
@@ -306,8 +864,9 @@ pip install -r requirements.txt
 **Solution:** This is normal behavior
 - Some sites have bot detection
 - Amazon and Flipkart are most reliable
-- Timeout is set to 30 seconds per site
+- Timeout is set to 10 seconds per site (15 seconds total with 5s overhead buffer)
 - Results from available sites will be shown
+- **Async scraping** runs all sites concurrently for faster results
 
 #### 7. **Selenium/ChromeDriver errors**
 **Solution:** 
