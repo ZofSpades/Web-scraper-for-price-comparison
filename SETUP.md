@@ -20,9 +20,12 @@ This is a real-time web scraping application that compares product prices across
 **Key Features:**
 - Real-time price comparison across 5 major e-commerce sites
 - Search history with analytics dashboard
-- CSV export functionality
+- CSV/PDF export functionality
 - Advanced pricing utilities with multi-currency support
 - Responsive modern UI design
+- **Async scraping** for improved performance (~15s for 5 sites)
+- **Selenium integration** with anti-detection for dynamic content
+- **Proxy & User-Agent rotation** to prevent IP bans
 
 ---
 
