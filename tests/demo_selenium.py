@@ -3,9 +3,10 @@ Simple Demo: Selenium Integration for Dynamic Pages
 Shows how the enhanced scraper handles both static and dynamic content.
 """
 
+import time
+
 from scrapers.amazon_scraper import AmazonScraper
 from scrapers.flipkart_scraper import FlipkartScraper
-import time
 
 
 def demo_automatic_fallback():
