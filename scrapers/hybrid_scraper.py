@@ -4,12 +4,14 @@ Extends BaseScraper to support both static and Selenium-based scraping.
 Enhanced with intelligent fallback detection and retry mechanisms.
 """
 
+import logging
+from abc import abstractmethod
+from typing import Dict
+
+import requests
+
 from scrapers.base_scraper import BaseScraper
 from scrapers.selenium_config import SeleniumConfig, SeleniumHelper
-from typing import Dict, Optional
-import requests
-from abc import abstractmethod
-import logging
 
 logger = logging.getLogger(__name__)
 
