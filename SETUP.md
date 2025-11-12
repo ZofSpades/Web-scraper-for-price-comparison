@@ -9,6 +9,9 @@
 - [Project Structure](#project-structure)
 - [Features](#features)
 - [Supported E-commerce Sites](#supported-e-commerce-sites)
+- [Advanced Features](#advanced-features)
+  - [Selenium Integration](#selenium-integration)
+  - [Proxy & User-Agent Rotation](#proxy--user-agent-rotation)
 - [Testing](#testing)
 - [Troubleshooting](#troubleshooting)
 
@@ -21,9 +24,12 @@ This is a real-time web scraping application that compares product prices across
 **Key Features:**
 - Real-time price comparison across 5 major e-commerce sites
 - Search history with analytics dashboard
-- CSV export functionality
+- CSV/PDF export functionality
 - Advanced pricing utilities with multi-currency support
 - Responsive modern UI design
+- **Async scraping** for improved performance (~15s for 5 sites)
+- **Selenium integration** with anti-detection for dynamic content
+- **Proxy & User-Agent rotation** to prevent IP bans
 
 ---
 
@@ -293,6 +299,294 @@ The application currently scrapes the following Indian e-commerce websites:
    - May encounter bot detection
 
 **Note:** Some sites may block automated requests. The application handles errors gracefully and shows results from available sites.
+
+---
+
+## 🚀 Advanced Features
+
+### Selenium Integration
+
+The scraper includes advanced Selenium integration for handling JavaScript-rendered websites and avoiding bot detection.
+
+#### Overview
+
+- **Intelligent Fallback**: Tries static scraping first for speed, automatically falls back to Selenium for dynamic content
+- **Anti-Detection Features**: User-agent rotation, WebDriver masking, browser fingerprint spoofing
+- **Retry Mechanism**: Configurable retry attempts with delays for improved reliability
+- **Advanced Wait Logic**: Smart waiting for page load, AJAX requests, and lazy-loaded content
+
+#### Key Components
+
+**1. SeleniumConfig** (`scrapers/selenium_config.py`)
+- Manages WebDriver creation and configuration
+- Implements anti-detection measures
+- Headless mode support with optimized performance settings
+
+**2. SeleniumHelper Class**
+Provides utility methods for robust Selenium operations:
+
+| Method | Purpose |
+|--------|---------|
+| `wait_for_element()` | Wait for specific element to appear |
+| `wait_for_any_element()` | Wait for any element from a list |
+| `wait_for_page_load()` | Wait for complete page load including dynamic content |
+| `wait_for_ajax()` | Wait for AJAX/jQuery requests to complete |
+| `safe_find_element()` | Find element without throwing exceptions |
+| `safe_find_elements()` | Find multiple elements safely |
+| `scroll_to_bottom()` | Scroll to trigger lazy loading |
+| `handle_lazy_loading()` | Handle infinite scroll pages |
+| `human_like_delay()` | Add random delays (0.5-2s) to simulate human behavior |
+| `click_element_safe()` | Robust clicking with scroll and JS fallback |
+| `take_screenshot()` | Capture screenshots for debugging |
+
+**3. HybridScraper** (`scrapers/hybrid_scraper.py`)
+Base class for scrapers with intelligent fallback logic:
+
+```python
+class HybridScraper(BaseScraper):
+    def scrape(self, query: str) -> dict:
+        # Try static scraping first
+        result = self._scrape_static(query)
+        
+        # Fallback to Selenium if needed
+        if self._should_fallback_to_selenium(result):
+            result = self._scrape_selenium(query)
+        
+        return result
+```
+
+#### Anti-Detection Features
+
+**User-Agent Rotation**
+- Pool of 23 realistic user agents
+- Randomly rotates on each request
+- Mimics real browsers (Chrome, Firefox, Safari, Edge)
+- Covers Windows, macOS, Linux, and iOS platforms
+
+**WebDriver Property Masking**
+```javascript
+// Hides automation indicators
+Object.defineProperty(navigator, 'webdriver', {get: () => undefined});
+delete navigator.__proto__.webdriver;
+```
+
+**Browser Fingerprint Spoofing**
+- Realistic plugin arrays
+- Permission query handling
+- Chrome runtime emulation
+- Language and timezone settings
+
+**Stealth Techniques**
+- `--disable-blink-features=AutomationControlled`
+- `--disable-infobars`
+- `--disable-dev-shm-usage`
+- Excludes "enable-automation" switch
+- Sets realistic window sizes
+
+#### Intelligent Fallback Detection
+
+The scraper automatically detects when Selenium is needed:
+
+1. **Missing Data Detection**: Checks if critical fields (title, price) are empty
+2. **JavaScript Indicators**: Looks for "Loading...", "Please wait", skeleton loaders
+3. **Bot Detection**: Detects CAPTCHA, "Access Denied", bot challenge messages
+4. **Content Length Check**: Flags suspiciously short HTML responses
+
+```python
+def _should_fallback_to_selenium(self, result: dict) -> bool:
+    # Check for missing/invalid data
+    if not result.get('title') or not result.get('price'):
+        return True
+    
+    # Check for JavaScript loading indicators
+    html = result.get('raw_html', '')
+    js_indicators = ['loading...', 'please wait', 'skeleton']
+    if any(indicator in html.lower() for indicator in js_indicators):
+        return True
+    
+    # Check for bot detection
+    bot_messages = ['captcha', 'access denied', 'unusual traffic']
+    if any(msg in html.lower() for msg in bot_messages):
+        return True
+    
+    return False
+```
+
+#### Retry Mechanism
+
+Configurable retry logic for improved reliability:
+
+```python
+def _scrape_with_retry(self, query: str, max_retries: int = 2) -> dict:
+    for attempt in range(max_retries):
+        try:
+            result = self.scrape(query)
+            if result and result.get('title'):
+                return result
+        except Exception as e:
+            if attempt < max_retries - 1:
+                time.sleep(1)  # Delay between retries
+                continue
+            raise
+```
+
+#### Usage Examples
+
+**Basic Selenium Scraping**:
+```python
+from scrapers.selenium_config import SeleniumConfig, SeleniumHelper
+
+# Create driver
+config = SeleniumConfig(headless=True, window_size="1920,1080")
+driver = config.create_driver()
+helper = SeleniumHelper(driver)
+
+# Navigate and wait
+driver.get("https://example.com")
+helper.wait_for_page_load()
+
+# Find elements safely
+element = helper.safe_find_element(By.CSS_SELECTOR, ".product-title")
+if element:
+    title = element.text
+
+# Handle lazy loading
+helper.handle_lazy_loading(scroll_pause=2, max_scrolls=5)
+
+# Clean up
+driver.quit()
+```
+
+**Using Demo Script**:
+```bash
+python tests/demo_selenium.py
+```
+
+The demo showcases:
+- Anti-detection features in action
+- User-agent rotation
+- Wait mechanisms
+- Lazy loading handling
+- Screenshot capture
+- Human-like interactions
+
+#### Best Practices
+
+1. **Use Static Scraping First**: Always try static scraping before Selenium for better performance
+2. **Implement Timeouts**: Set reasonable timeouts to avoid hanging (default: 10s per site)
+3. **Handle Errors Gracefully**: Use try-except blocks and return partial results
+4. **Add Human-like Delays**: Use `human_like_delay()` between actions
+5. **Monitor for Changes**: Websites update frequently; test scrapers regularly
+6. **Use Headless Mode**: Run headless in production for better resource usage
+7. **Clean Up Resources**: Always call `driver.quit()` to free resources
+
+#### Performance Considerations
+
+- **Static Scraping**: ~1-2 seconds per site
+- **Selenium Scraping**: ~3-5 seconds per site
+- **Memory Usage**: ~100-200 MB per Selenium instance
+- **Concurrent Limit**: Recommend max 3-5 parallel Selenium instances
+
+#### Troubleshooting
+
+**ChromeDriver Issues**:
+```bash
+pip install --upgrade selenium webdriver-manager
+```
+
+**Selenium Timeout**:
+- Increase timeout in SeleniumHelper methods
+- Check internet connection
+- Verify site is accessible
+
+**Bot Detection**:
+- Ensure anti-detection features are enabled
+- Add more delays with `human_like_delay()`
+- Rotate user agents more frequently
+- Consider using proxy rotation (see next section)
+
+### Proxy & User-Agent Rotation
+
+The scraper includes built-in support for proxy and user-agent rotation to prevent IP bans and bot detection.
+
+#### Quick Start
+
+Proxy rotation is handled automatically when configured in environment variables or `scrapers/selenium_config.py`.
+
+#### Features
+
+- **23 User Agents**: Realistic browser user agents from Chrome, Firefox, Safari, Edge across Windows, macOS, Linux, and iOS
+- **Automatic Rotation**: User agents rotate randomly on each request
+- **Proxy Support**: Configure HTTP/HTTPS/SOCKS proxies
+- **Failure Handling**: Automatic proxy rotation on failure
+- **Success Tracking**: Monitors proxy success rates
+
+#### Configuration
+
+**Method 1: Environment Variables**
+```bash
+# Single proxy
+export HTTP_PROXY="http://proxy-server:port"
+export HTTPS_PROXY="http://proxy-server:port"
+
+# With authentication
+export HTTP_PROXY="http://user:pass@proxy-server:port"
+```
+
+**Method 2: Code Configuration**
+```python
+from scrapers.selenium_config import SeleniumConfig
+
+# With proxy
+config = SeleniumConfig(
+    headless=True,
+    proxy="http://proxy-server:port"
+)
+driver = config.create_driver()
+```
+
+#### User-Agent Pool
+
+The scraper includes 23 realistic user agents:
+- **Chrome** (10 agents): Windows, macOS, Linux - multiple versions
+- **Firefox** (7 agents): Windows, macOS, Linux - multiple versions
+- **Safari** (4 agents): macOS, iOS (iPhone/iPad)
+- **Edge** (2 agents): Windows - multiple versions
+
+User agents are randomly selected on each request to avoid detection patterns and simulate diverse traffic.
+
+#### Proxy Services
+
+**Free Proxies** (testing only):
+- Free Proxy List: https://free-proxy-list.net/
+- ProxyScrape: https://proxyscrape.com/
+
+**Paid Proxies** (production):
+- Bright Data: https://brightdata.com/
+- Oxylabs: https://oxylabs.io/
+- Smartproxy: https://smartproxy.com/
+
+#### Best Practices
+
+1. **Rotate Frequently**: Change user agents on each request
+2. **Use Quality Proxies**: Free proxies are unreliable; invest in paid proxies for production
+3. **Monitor Success Rates**: Track which proxies work best
+4. **Add Delays**: Combine with human-like delays for better results
+5. **Respect Robots.txt**: Check site policies before aggressive scraping
+6. **Handle Failures**: Implement retry logic with different proxies
+
+#### Testing Rotation
+
+Run the rotation tests:
+```bash
+pytest tests/test_rotation.py -v
+```
+
+Tests verify:
+- User-agent rotation works correctly
+- Proxy configuration is applied
+- Fallback mechanisms function
+- Multiple requests use different agents
 
 ---
 
