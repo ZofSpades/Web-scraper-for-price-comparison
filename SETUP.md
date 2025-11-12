@@ -358,9 +358,10 @@ class HybridScraper(BaseScraper):
 #### Anti-Detection Features
 
 **User-Agent Rotation**
-- Pool of 20+ realistic user agents
+- Pool of 23 realistic user agents
 - Randomly rotates on each request
 - Mimics real browsers (Chrome, Firefox, Safari, Edge)
+- Covers Windows, macOS, Linux, and iOS platforms
 
 **WebDriver Property Masking**
 ```javascript
@@ -514,8 +515,8 @@ Proxy rotation is handled automatically when configured in environment variables
 
 #### Features
 
-- **20+ User Agents**: Realistic browser user agents from Chrome, Firefox, Safari, Edge
-- **Automatic Rotation**: User agents rotate on each request
+- **23 User Agents**: Realistic browser user agents from Chrome, Firefox, Safari, Edge across Windows, macOS, Linux, and iOS
+- **Automatic Rotation**: User agents rotate randomly on each request
 - **Proxy Support**: Configure HTTP/HTTPS/SOCKS proxies
 - **Failure Handling**: Automatic proxy rotation on failure
 - **Success Tracking**: Monitors proxy success rates
@@ -546,13 +547,13 @@ driver = config.create_driver()
 
 #### User-Agent Pool
 
-The scraper includes 20+ realistic user agents:
-- Chrome (Windows, Mac, Linux)
-- Firefox (Windows, Mac, Linux)
-- Safari (Mac, iOS)
-- Edge (Windows)
+The scraper includes 23 realistic user agents:
+- **Chrome** (10 agents): Windows, macOS, Linux - multiple versions
+- **Firefox** (7 agents): Windows, macOS, Linux - multiple versions
+- **Safari** (4 agents): macOS, iOS (iPhone/iPad)
+- **Edge** (2 agents): Windows - multiple versions
 
-User agents are randomly selected on each request to avoid detection patterns.
+User agents are randomly selected on each request to avoid detection patterns and simulate diverse traffic.
 
 #### Proxy Services
 
