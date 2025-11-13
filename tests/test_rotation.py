@@ -32,7 +32,8 @@ def test_user_agent_rotation():
         print(f"  {i+1}. {ua[:70]}...")
     
     print("\n✓ User-agent rotation working correctly!")
-    return True
+    assert len(rotator.user_agents) > 0
+    assert rotator.get_random() is not None
 
 
 def test_proxy_rotation():
@@ -91,7 +92,8 @@ def test_proxy_rotation():
     print(f"  Available proxies: {available}/{total}")
     
     print("\n✓ Proxy rotation working correctly!")
-    return True
+    assert len(rotator.proxies) > 0
+    assert available == total
 
 
 def test_rotation_manager():
@@ -131,7 +133,8 @@ def test_rotation_manager():
         print(f"  {key}: {value}")
     
     print("\n✓ Rotation manager working correctly!")
-    return True
+    assert ua is not None
+    assert 'User-Agent' in headers
 
 
 def test_base_scraper_integration():
@@ -179,7 +182,8 @@ def test_base_scraper_integration():
     print(f"  get_random_proxy(): {proxy2}")
     
     print("\n✓ BaseScraper integration working correctly!")
-    return True
+    assert status['user_agents_count'] > 0
+    assert 'User-Agent' in headers
 
 
 def test_error_handling():
@@ -215,7 +219,7 @@ def test_error_handling():
     print("  ✓ Cooldown mechanism in place")
     
     print("\n✓ Error handling tests passed!")
-    return True
+    # All assertions passed above
 
 
 def test_real_request_simulation():
@@ -260,7 +264,7 @@ def test_real_request_simulation():
     print(f"  Available Proxies: {status['available_proxies']}/{status['total_proxies']}")
     
     print("\n✓ Request simulation completed!")
-    return True
+    assert status['total_proxies'] > 0
 
 
 def run_all_tests():
