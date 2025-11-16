@@ -226,9 +226,9 @@ class TestDatabaseIntegration:
                     FOREIGN KEY (site_id) REFERENCES sites (site_id)
                 )
             ''')
-            # Create exports table
+            # Create export_history table
             cursor.execute('''
-                CREATE TABLE IF NOT EXISTS exports (
+                CREATE TABLE IF NOT EXISTS export_history (
                     export_id INTEGER PRIMARY KEY AUTOINCREMENT,
                     search_id INTEGER NOT NULL,
                     export_format TEXT NOT NULL,
