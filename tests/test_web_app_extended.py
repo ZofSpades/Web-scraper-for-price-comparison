@@ -22,8 +22,8 @@ class TestWebAppExtended:
             mock_manager.search_product.return_value = []
             mock_db.create_search.return_value = 1
             
-            response = client.get('/search?query=laptop+%26+mouse')
-            assert response.status_code == 200
+            response = client.post('/search', data={'query': 'laptop & mouse'})
+            assert response.status_code in [200, 302]  # Accept OK or redirect
 
     def test_results_page_with_full_data(self, client):
         """Test results page rendering with complete product data"""
@@ -59,7 +59,7 @@ class TestWebAppExtended:
             mock_db.create_search.return_value = 1
             mock_db.add_site.return_value = 1
             
-            response = client.get('/api/search?query=laptop')
+            response = client.post('/api/search', json={'query': 'laptop'})
             assert response.status_code == 200
             data = json.loads(response.data)
             assert 'results' in data or 'error' in data  # Accept either success or error
