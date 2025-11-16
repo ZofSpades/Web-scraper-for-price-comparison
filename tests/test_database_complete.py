@@ -65,20 +65,20 @@ class TestSearchHistoryDB:
     def test_create_search_with_all_params(self, db):
         with patch.object(db.db, 'execute_query') as mock:
             mock.return_value = (1, None)
-            search_id = db.create_search('laptop', 'pending', 'amazon', 3)
+            search_id = db.create_search('laptop', user_id=123, status='pending')
             assert search_id == (1, None)
 
     def test_update_search_status(self, db):
         with patch.object(db.db, 'execute_query') as mock:
             mock.return_value = (True, None)
-            result = db.update_search(1, 'completed')
+            result = db.update_search(1, total_results=5, status='completed')
             assert result == (True, None)
             mock.assert_called_once()
 
     def test_update_search_with_results_count(self, db):
         with patch.object(db.db, 'execute_query') as mock:
             mock.return_value = (True, None)
-            result = db.update_search(1, 'completed', 5)
+            result = db.update_search(1, total_results=5, status='completed', duration_ms=1000)
             assert result == (True, None)
 
     def test_add_result(self, db):
