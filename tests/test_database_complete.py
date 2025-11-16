@@ -56,33 +56,33 @@ class TestSearchHistoryDB:
             return create_sqlite_db(':memory:')
 
     def test_create_search(self, db):
-        with patch.object(db.db_manager, 'execute_query') as mock:
+        with patch.object(db.db, 'execute_query') as mock:
             mock.return_value = (1, None)
             search_id = db.create_search('laptop', 'pending')
             assert search_id == 1
             mock.assert_called_once()
 
     def test_create_search_with_all_params(self, db):
-        with patch.object(db.db_manager, 'execute_query') as mock:
+        with patch.object(db.db, 'execute_query') as mock:
             mock.return_value = (1, None)
             search_id = db.create_search('laptop', 'pending', 'amazon', 3)
             assert search_id == 1
 
     def test_update_search_status(self, db):
-        with patch.object(db.db_manager, 'execute_query') as mock:
+        with patch.object(db.db, 'execute_query') as mock:
             mock.return_value = (True, None)
             result = db.update_search(1, 'completed')
             assert result is True
             mock.assert_called_once()
 
     def test_update_search_with_results_count(self, db):
-        with patch.object(db.db_manager, 'execute_query') as mock:
+        with patch.object(db.db, 'execute_query') as mock:
             mock.return_value = (True, None)
             result = db.update_search(1, 'completed', 5)
             assert result is True
 
     def test_add_result(self, db):
-        with patch.object(db.db_manager, 'execute_query') as mock:
+        with patch.object(db.db, 'execute_query') as mock:
             mock.return_value = (1, None)
             result_data = {
                 'title': 'Test Product',
@@ -94,21 +94,21 @@ class TestSearchHistoryDB:
             mock.assert_called_once()
 
     def test_add_result_with_error(self, db):
-        with patch.object(db.db_manager, 'execute_query') as mock:
+        with patch.object(db.db, 'execute_query') as mock:
             mock.return_value = (1, None)
             result_data = {'error': 'Failed to scrape'}
             result_id = db.add_result(1, 'amazon', 'http://test.com', result_data)
             assert result_id == 1
 
     def test_add_site(self, db):
-        with patch.object(db.db_manager, 'execute_query') as mock:
+        with patch.object(db.db, 'execute_query') as mock:
             mock.return_value = (1, None)
             site_id = db.add_site(1, 'amazon', 'http://amazon.in')
             assert site_id == 1
             mock.assert_called_once()
 
     def test_get_search_history(self, db):
-        with patch.object(db.db_manager, 'execute_query') as mock:
+        with patch.object(db.db, 'execute_query') as mock:
             mock.return_value = ([
                 {'search_id': 1, 'query': 'laptop', 'status': 'completed'}
             ], None)
@@ -117,13 +117,13 @@ class TestSearchHistoryDB:
             assert history[0]['query'] == 'laptop'
 
     def test_get_search_history_with_limit(self, db):
-        with patch.object(db.db_manager, 'execute_query') as mock:
+        with patch.object(db.db, 'execute_query') as mock:
             mock.return_value = ([], None)
             history = db.get_search_history(5)
             mock.assert_called_once()
 
     def test_get_search_results(self, db):
-        with patch.object(db.db_manager, 'execute_query') as mock:
+        with patch.object(db.db, 'execute_query') as mock:
             mock.return_value = ([
                 {'result_id': 1, 'title': 'Product 1', 'price': '999'}
             ], None)
@@ -132,7 +132,7 @@ class TestSearchHistoryDB:
             assert results[0]['title'] == 'Product 1'
 
     def test_get_search_sites(self, db):
-        with patch.object(db.db_manager, 'execute_query') as mock:
+        with patch.object(db.db, 'execute_query') as mock:
             mock.return_value = ([
                 {'site_name': 'amazon', 'url': 'http://amazon.in'}
             ], None)
@@ -141,7 +141,7 @@ class TestSearchHistoryDB:
             assert sites[0]['site_name'] == 'amazon'
 
     def test_close_connection(self, db):
-        with patch.object(db.db_manager, 'close') as mock:
+        with patch.object(db.db, 'close') as mock:
             db.close()
             mock.assert_called_once()
 
