@@ -18,15 +18,19 @@ from database.database import (
 class TestDatabaseFactory:
     """Test database factory functions"""
 
-    def test_create_sqlite_db_returns_search_history_wrapper(self):
+    @patch('database.database.DatabaseManager.initialize_schema')
+    def test_create_sqlite_db_returns_search_history_wrapper(self, mock_init_schema):
         db = create_sqlite_db(':memory:')
         assert isinstance(db, SearchHistoryDB)
+        mock_init_schema.assert_called_once()
 
-    def test_create_sqlite_db_with_file(self, tmp_path):
+    @patch('database.database.DatabaseManager.initialize_schema')
+    def test_create_sqlite_db_with_file(self, mock_init_schema, tmp_path):
         db_path = tmp_path / "test.db"
         db = create_sqlite_db(str(db_path))
         assert db is not None
         assert isinstance(db, SearchHistoryDB)
+        mock_init_schema.assert_called_once()
 
     @patch('database.database.DatabaseManager')
     def test_create_mysql_db_calls_manager(self, mock_manager):
@@ -48,7 +52,8 @@ class TestSearchHistoryDB:
 
     @pytest.fixture
     def db(self):
-        return create_sqlite_db(':memory:')
+        with patch('database.database.DatabaseManager.initialize_schema'):
+            return create_sqlite_db(':memory:')
 
     def test_create_search(self, db):
         with patch.object(db.db_manager, 'execute_query') as mock:
@@ -183,7 +188,8 @@ class TestDatabaseIntegration:
 
     @pytest.fixture
     def db(self):
-        db = create_sqlite_db(':memory:')
+        with patch('database.database.DatabaseManager.initialize_schema'):
+            db = create_sqlite_db(':memory:')
         yield db
         db.close()
 
