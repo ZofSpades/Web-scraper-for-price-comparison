@@ -278,7 +278,7 @@ class SeleniumHelper:
                 )
             )
             for by, value in selectors:
-                elements = self.self.driver.find_elements(by, value)
+                elements = self.driver.find_elements(by, value)
                 if elements:
                     return elements[0]
             return None
@@ -351,7 +351,7 @@ class SeleniumHelper:
             List of WebElements or empty list if not found
         """
         try:
-            return self.self.driver.find_elements(by, value)
+            return self.driver.find_elements(by, value)
         except NoSuchElementException:
             return []
     
