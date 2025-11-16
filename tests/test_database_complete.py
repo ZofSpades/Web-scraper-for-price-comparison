@@ -171,12 +171,17 @@ class TestDatabaseIntegration:
 
     @pytest.fixture
     def db(self):
-        # Create in-memory database and initialize schema manually
+        import tempfile
+        import os
+        # Create temporary database file
         from database.database import DatabaseConfig, DatabaseManager
-        config = DatabaseConfig(db_type='sqlite', database=':memory:')
+        fd, db_path = tempfile.mkstemp(suffix='.db')
+        os.close(fd)
+        
+        config = DatabaseConfig(db_type='sqlite', database=db_path)
         db_manager = DatabaseManager(config)
         
-        # Create tables directly (schema for in-memory testing)
+        # Create tables directly (schema for testing)
         with db_manager.get_connection() as conn:
             cursor = conn.cursor()
             # Create searches table
@@ -239,6 +244,12 @@ class TestDatabaseIntegration:
         from database.database import SearchHistoryDB
         db = SearchHistoryDB(db_manager)
         yield db
+        
+        # Cleanup: remove temporary database file
+        try:
+            os.unlink(db_path)
+        except:
+            pass
 
     def test_full_search_workflow(self, db):
         # Create a search
