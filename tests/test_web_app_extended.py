@@ -27,27 +27,25 @@ class TestWebAppExtended:
 
     def test_results_page_with_full_data(self, client):
         """Test results page rendering with complete product data"""
-        with client.session_transaction() as session:
-            session['current_results'] = [
-                {
-                    'site': 'amazon',
-                    'product_name': 'Dell Laptop',
-                    'price': '45000',
-                    'original_price': '50000',
-                    'discount_percentage': '10%',
-                    'rating': '4.5',
-                    'reviews_count': '100',
-                    'availability': 'In Stock',
-                    'seller': 'Amazon',
-                    'product_url': 'http://amazon.in/laptop',
-                    'image_url': 'http://amazon.in/image.jpg'
-                }
-            ]
-        
-        response = client.get('/results')
-        assert response.status_code == 200
-        # Just verify the response is valid HTML
-        assert b'<html' in response.data or b'<!DOCTYPE' in response.data
+        with patch('web.app.current_results', [
+            {
+                'site': 'amazon',
+                'product_name': 'Dell Laptop',
+                'price': '45000',
+                'original_price': '50000',
+                'discount_percentage': '10%',
+                'rating': '4.5',
+                'reviews_count': '100',
+                'availability': 'In Stock',
+                'seller': 'Amazon',
+                'product_url': 'http://amazon.in/laptop',
+                'image_url': 'http://amazon.in/image.jpg'
+            }
+        ]):
+            response = client.get('/results')
+            assert response.status_code == 200
+            # Just verify the response is valid HTML
+            assert b'<html' in response.data or b'<!DOCTYPE' in response.data
 
     @patch('web.app.db')
     def test_api_search_with_results(self, mock_db, client):
