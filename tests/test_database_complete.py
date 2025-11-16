@@ -59,27 +59,27 @@ class TestSearchHistoryDB:
         with patch.object(db.db, 'execute_query') as mock:
             mock.return_value = (1, None)
             search_id = db.create_search('laptop', 'pending')
-            assert search_id == 1
+            assert search_id == (1, None)
             mock.assert_called_once()
 
     def test_create_search_with_all_params(self, db):
         with patch.object(db.db, 'execute_query') as mock:
             mock.return_value = (1, None)
             search_id = db.create_search('laptop', 'pending', 'amazon', 3)
-            assert search_id == 1
+            assert search_id == (1, None)
 
     def test_update_search_status(self, db):
         with patch.object(db.db, 'execute_query') as mock:
             mock.return_value = (True, None)
             result = db.update_search(1, 'completed')
-            assert result is True
+            assert result == (True, None)
             mock.assert_called_once()
 
     def test_update_search_with_results_count(self, db):
         with patch.object(db.db, 'execute_query') as mock:
             mock.return_value = (True, None)
             result = db.update_search(1, 'completed', 5)
-            assert result is True
+            assert result == (True, None)
 
     def test_add_result(self, db):
         with patch.object(db.db, 'execute_query') as mock:
@@ -90,7 +90,7 @@ class TestSearchHistoryDB:
                 'rating': '4.5'
             }
             result_id = db.add_result(1, 'amazon', 'http://test.com', result_data)
-            assert result_id == 1
+            assert result_id == (1, None)
             mock.assert_called_once()
 
     def test_add_result_with_error(self, db):
@@ -98,13 +98,13 @@ class TestSearchHistoryDB:
             mock.return_value = (1, None)
             result_data = {'error': 'Failed to scrape'}
             result_id = db.add_result(1, 'amazon', 'http://test.com', result_data)
-            assert result_id == 1
+            assert result_id == (1, None)
 
     def test_add_site(self, db):
         with patch.object(db.db, 'execute_query') as mock:
             mock.return_value = (1, None)
             site_id = db.add_site(1, 'amazon', 'http://amazon.in')
-            assert site_id == 1
+            assert site_id == (1, None)
             mock.assert_called_once()
 
     def test_get_search_history(self, db):
@@ -113,8 +113,7 @@ class TestSearchHistoryDB:
                 {'search_id': 1, 'query': 'laptop', 'status': 'completed'}
             ], None)
             history = db.get_search_history()
-            assert len(history) == 1
-            assert history[0]['query'] == 'laptop'
+            assert history == ([{'search_id': 1, 'query': 'laptop', 'status': 'completed'}], None)
 
     def test_get_search_history_with_limit(self, db):
         with patch.object(db.db, 'execute_query') as mock:
@@ -128,8 +127,7 @@ class TestSearchHistoryDB:
                 {'result_id': 1, 'title': 'Product 1', 'price': '999'}
             ], None)
             results = db.get_search_results(1)
-            assert len(results) == 1
-            assert results[0]['title'] == 'Product 1'
+            assert results == ([{'result_id': 1, 'title': 'Product 1', 'price': '999'}], None)
 
     def test_get_search_sites(self, db):
         with patch.object(db.db, 'execute_query') as mock:
@@ -137,8 +135,7 @@ class TestSearchHistoryDB:
                 {'site_name': 'amazon', 'url': 'http://amazon.in'}
             ], None)
             sites = db.get_search_sites(1)
-            assert len(sites) == 1
-            assert sites[0]['site_name'] == 'amazon'
+            assert sites == ([{'site_name': 'amazon', 'url': 'http://amazon.in'}], None)
 
     def test_close_connection(self, db):
         with patch.object(db.db, 'close') as mock:
