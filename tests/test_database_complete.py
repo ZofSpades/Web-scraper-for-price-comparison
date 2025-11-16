@@ -274,7 +274,7 @@ class TestDatabaseIntegration:
         db.update_search(search_id, total_results=1, status='completed')  # returns None
 
         # Get history
-        history = db.get_export_history(limit=10)
+        history = db.get_recent_searches(limit=10)
         assert len(history) > 0
 
         # Get results
@@ -289,7 +289,7 @@ class TestDatabaseIntegration:
         id3 = db.create_search('tablet', status='pending')
 
         # Get history
-        history = db.get_export_history(limit=10)
+        history = db.get_recent_searches(limit=10)
         assert len(history) == 3
 
     def test_search_with_multiple_results(self, db):
