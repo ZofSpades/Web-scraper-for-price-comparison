@@ -171,10 +171,74 @@ class TestDatabaseIntegration:
 
     @pytest.fixture
     def db(self):
-        # Create in-memory database with actual schema
-        db = create_sqlite_db(':memory:', schema_file='database/schema_sqlite.sql')
+        # Create in-memory database and initialize schema manually
+        from database.database import DatabaseConfig, DatabaseManager
+        config = DatabaseConfig(db_type='sqlite', database=':memory:')
+        db_manager = DatabaseManager(config)
+        
+        # Create tables directly (schema for in-memory testing)
+        with db_manager.get_connection() as conn:
+            cursor = conn.cursor()
+            # Create searches table
+            cursor.execute('''
+                CREATE TABLE IF NOT EXISTS searches (
+                    search_id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    query TEXT NOT NULL,
+                    user_id INTEGER,
+                    status TEXT DEFAULT 'in_progress',
+                    total_results INTEGER DEFAULT 0,
+                    search_timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
+                    search_duration_ms INTEGER
+                )
+            ''')
+            # Create sites table
+            cursor.execute('''
+                CREATE TABLE IF NOT EXISTS sites (
+                    site_id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    site_name TEXT UNIQUE NOT NULL,
+                    site_url TEXT,
+                    last_scraped DATETIME
+                )
+            ''')
+            # Create search_results table
+            cursor.execute('''
+                CREATE TABLE IF NOT EXISTS search_results (
+                    result_id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    search_id INTEGER NOT NULL,
+                    site_id INTEGER NOT NULL,
+                    product_name TEXT,
+                    price TEXT,
+                    original_price TEXT,
+                    discount_percentage TEXT,
+                    rating TEXT,
+                    reviews_count TEXT,
+                    availability TEXT,
+                    seller TEXT,
+                    product_url TEXT,
+                    image_url TEXT,
+                    scraped_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                    FOREIGN KEY (search_id) REFERENCES searches (search_id),
+                    FOREIGN KEY (site_id) REFERENCES sites (site_id)
+                )
+            ''')
+            # Create exports table
+            cursor.execute('''
+                CREATE TABLE IF NOT EXISTS exports (
+                    export_id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    search_id INTEGER NOT NULL,
+                    export_format TEXT NOT NULL,
+                    result_count INTEGER,
+                    file_path TEXT,
+                    export_timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
+                    FOREIGN KEY (search_id) REFERENCES searches (search_id)
+                )
+            ''')
+            conn.commit()
+        
+        # Create SearchHistoryDB wrapper
+        from database.database import SearchHistoryDB
+        db = SearchHistoryDB(db_manager)
         yield db
-        # SearchHistoryDB doesn't have close method
 
     def test_full_search_workflow(self, db):
         # Create a search
