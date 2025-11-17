@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Search Details - {{ search.query }}</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 30px 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 16px;
+            padding: 40px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 35px;
+            padding-bottom: 25px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+
+        .header h1 {
+            color: #2d3748;
+            font-size: 2.5em;
+            margin-bottom: 8px;
+            font-weight: 700;
+        }
+
+        .nav-links {
+            margin-bottom: 35px;
+            text-align: center;
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .nav-links a {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 10px 20px;
+            background: white;
+            color: #667eea;
+            text-decoration: none;
+            border-radius: 8px;
+            border: 2px solid #667eea;
+            transition: all 0.3s ease;
+            font-weight: 600;
+            font-size: 0.95em;
+        }
+
+        .nav-links a:hover {
+            background: #667eea;
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+        }
+
+        .search-info {
+            background: #f7fafc;
+            padding: 30px;
+            border-radius: 12px;
+            margin-bottom: 30px;
+            border: 1px solid #e2e8f0;
+        }
+
+        .search-info h2 {
+            color: #2d3748;
+            margin-bottom: 20px;
+            font-size: 1.5em;
+            font-weight: 700;
+        }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 18px;
+            margin-top: 15px;
+        }
+
+        .info-item {
+            padding: 20px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            border: 1px solid #e2e8f0;
+            transition: all 0.3s ease;
+        }
+
+        .info-item:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 16px rgba(102, 126, 234, 0.15);
+        }
+
+        .info-item label {
+            display: block;
+            font-size: 0.8em;
+            color: #718096;
+            text-transform: uppercase;
+            margin-bottom: 8px;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+        }
+
+        .info-item .value {
+            font-size: 1.3em;
+            color: #2d3748;
+            font-weight: 700;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.85em;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .status-completed {
+            background: #c6f6d5;
+            color: #22543d;
+        }
+
+        .status-failed {
+            background: #fed7d7;
+            color: #742a2a;
+        }
+
+        .section-title {
+            font-size: 1.8em;
+            color: #2d3748;
+            margin: 40px 0 20px 0;
+            padding-bottom: 12px;
+            border-bottom: 3px solid #667eea;
+            font-weight: 700;
+        }
+
+        .results-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        }
+
+        .results-table thead {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .results-table th,
+        .results-table td {
+            padding: 16px 12px;
+            text-align: left;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .results-table th {
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.85em;
+            letter-spacing: 0.5px;
+        }
+
+        .results-table tbody tr {
+            transition: background 0.2s ease;
+        }
+
+        .results-table tbody tr:hover {
+            background: #f7fafc;
+        }
+
+        .results-table tbody tr:first-child {
+            background: #d4f4dd;
+        }
+
+        .results-table tbody tr:first-child:hover {
+            background: #c6f0d0;
+        }
+
+        .results-table tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        .product-name {
+            font-weight: 600;
+            color: #2d3748;
+            max-width: 300px;
+        }
+
+        .price {
+            font-size: 1.2em;
+            font-weight: 700;
+            color: #38a169;
+        }
+
+        .original-price {
+            text-decoration: line-through;
+            color: #a0aec0;
+            font-size: 0.9em;
+        }
+
+        .discount {
+            color: #e53e3e;
+            font-weight: 600;
+        }
+
+        .rating {
+            color: #ecc94b;
+        }
+
+        .product-link {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 600;
+            transition: color 0.2s ease;
+        }
+
+        .product-link:hover {
+            color: #764ba2;
+            text-decoration: underline;
+        }
+
+        .metadata-section,
+        .export-section {
+            background: #f7fafc;
+            padding: 20px;
+            border-radius: 12px;
+            margin-top: 20px;
+            border: 1px solid #e2e8f0;
+        }
+
+        .metadata-list,
+        .export-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        .metadata-list li,
+        .export-list li {
+            padding: 15px;
+            background: white;
+            margin-bottom: 10px;
+            border-radius: 8px;
+            display: flex;
+            justify-content: space-between;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
+            border: 1px solid #e2e8f0;
+        }
+
+        .metadata-list li:last-child,
+        .export-list li:last-child {
+            margin-bottom: 0;
+        }
+
+        .export-button {
+            background: linear-gradient(135deg, #38a169 0%, #2f855a 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1em;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 8px rgba(56, 161, 105, 0.3);
+        }
+
+        .export-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(56, 161, 105, 0.4);
+        }
+
+        .no-data {
+            text-align: center;
+            padding: 40px 20px;
+            color: #718096;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 25px 20px;
+            }
+
+            .header h1 {
+                font-size: 1.8em;
+            }
+
+            .nav-links {
+                flex-direction: column;
+                gap: 8px;
+            }
+
+            .nav-links a {
+                width: 100%;
+                justify-content: center;
+            }
+
+            .results-table {
+                font-size: 0.85em;
+            }
+
+            .results-table th,
+            .results-table td {
+                padding: 12px 6px;
+            }
+
+            .product-name {
+                max-width: 150px;
+            }
+
+            .info-item .value {
+                font-size: 1.1em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔍 Search Details</h1>
+        </div>
+
+        <div class="nav-links">
+            <a href="/">🏠 New Search</a>
+            <a href="/history">📜 History</a>
+            <a href="/statistics">📊 Statistics</a>
+        </div>
+
+        <div class="search-info">
+            <h2>Search Query: "{{ search.query }}"</h2>
+            
+            <div class="info-grid">
+                <div class="info-item">
+                    <label>Search ID</label>
+                    <div class="value">#{{ search.search_id }}</div>
+                </div>
+                <div class="info-item">
+                    <label>Timestamp</label>
+                    <div class="value">{{ search.search_timestamp }}</div>
+                </div>
+                <div class="info-item">
+                    <label>Total Results</label>
+                    <div class="value">{{ search.total_results }}</div>
+                </div>
+                <div class="info-item">
+                    <label>Duration</label>
+                    <div class="value">
+                        {% if search.search_duration_ms %}
+                            {{ (search.search_duration_ms / 1000)|round(2) }}s
+                        {% else %}
+                            -
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="info-item">
+                    <label>Status</label>
+                    <div class="value">
+                        <span class="status-badge status-{{ search.status }}">
+                            {{ search.status }}
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {% if metadata %}
+        <h3 class="section-title">📋 Metadata</h3>
+        <div class="metadata-section">
+            <ul class="metadata-list">
+                {% for meta in metadata %}
+                <li>
+                    <strong>{{ meta.metadata_key }}:</strong>
+                    <span>{{ meta.metadata_value }}</span>
+                </li>
+                {% endfor %}
+            </ul>
+        </div>
+        {% endif %}
+
+        <h3 class="section-title">🛍️ Results ({{ results|length }})</h3>
+        
+        {% if results %}
+        <div style="margin-bottom: 15px;">
+            <form action="/export/csv/{{ search.search_id }}" method="POST" style="display: inline;">
+                <button type="submit" class="export-button">📥 Export to CSV</button>
+            </form>
+        </div>
+
+        <table class="results-table">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Product</th>
+                    <th>Site</th>
+                    <th>Price</th>
+                    <th>Original</th>
+                    <th>Discount</th>
+                    <th>Rating</th>
+                    <th>Availability</th>
+                    <th>Link</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for result in results %}
+                <tr>
+                    <td>{{ loop.index }}</td>
+                    <td class="product-name">{{ result.product_name }}</td>
+                    <td>{{ result.site_name }}</td>
+                    <td class="price">₹{{ result.price }}</td>
+                    <td>
+                        {% if result.original_price and result.original_price != result.price %}
+                            <span class="original-price">₹{{ result.original_price }}</span>
+                        {% else %}
+                            -
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if result.discount_percentage %}
+                            <span class="discount">{{ result.discount_percentage }}% OFF</span>
+                        {% else %}
+                            -
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if result.rating %}
+                            <span class="rating">⭐ {{ result.rating }}</span>
+                            {% if result.reviews_count %}
+                                <br><small>({{ result.reviews_count }} reviews)</small>
+                            {% endif %}
+                        {% else %}
+                            -
+                        {% endif %}
+                    </td>
+                    <td>{{ result.availability or '-' }}</td>
+                    <td>
+                        {% if result.product_url %}
+                            <a href="{{ result.product_url }}" target="_blank" class="product-link">View →</a>
+                        {% else %}
+                            -
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <div class="no-data">
+            <p>No results found for this search.</p>
+        </div>
+        {% endif %}
+
+        {% if exports %}
+        <h3 class="section-title">📤 Export History</h3>
+        <div class="export-section">
+            <ul class="export-list">
+                {% for export in exports %}
+                <li>
+                    <div>
+                        <strong>{{ export.export_format|upper }}</strong> export
+                        <br>
+                        <small>{{ export.export_timestamp }} - {{ export.result_count }} results</small>
+                    </div>
+                    <span style="color: #28a745;">✓ Exported</span>
+                </li>
+                {% endfor %}
+            </ul>
+        </div>
+        {% endif %}
+    </div>
+</body>
+</html>

@@ -1,0 +1,4 @@
+[bandit]
+# Exclude tests directory - assertions (B101) are expected and safe in pytest test files
+exclude_dirs = ['./tests']
+skips = ['B101']
