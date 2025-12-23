@@ -61,8 +61,8 @@ Before you begin, ensure you have the following installed on your system:
 ### Step 1: Clone the Repository
 
 ```bash
-git clone https://github.com/pestechnology/PESU_EC_CSE_K_P60_Web_Scraper_for_Price_Comparison_Team-5.git
-cd PESU_EC_CSE_K_P60_Web_Scraper_for_Price_Comparison_Team-5
+git clone https://github.com/ZofSpades/Web-scraper-for-price-comparison.git
+cd Web-scraper-for-price-comparison
 ```
 
 ### Step 2: Create Virtual Environment (Recommended)
@@ -159,7 +159,7 @@ Press `CTRL+C` in the terminal to stop the server.
 ## 📁 Project Structure
 
 ```
-PESU_EC_CSE_K_P60_Web_Scraper_for_Price_Comparison_Team-5/
+Web-scraper-for-price-comparison/
 │
 ├── main.py                          # Application entry point
 ├── requirements.txt                 # Python dependencies
@@ -987,9 +987,12 @@ python main.py
 
 ## 👥 Development Team
 
-**Team-5 - Web Scraper for Price Comparison**
-- Course: CSE (K) Section P60
-- Institution: PESU EC Campus
+**Web Scraper for Price Comparison**
+
+- **Varun Rathod** - [github.com/ZofSpades](https://github.com/ZofSpades)
+- **Vrishabh S Hiremath** - [github.com/Lxgacy85](https://github.com/Lxgacy85)
+- **Vatsal Jain** - [github.com/vatsalj2005](https://github.com/vatsalj2005)
+- **Vedanta Barman** - [github.com/geckbags](https://github.com/geckbags)
 
 ---
 
